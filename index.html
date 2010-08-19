@@ -73,14 +73,31 @@
             throw "Ajaxwar was already defined.  Someone probably did bad copy/pasting.";
         }
         
-        AjaxWar._objRefs = [];
+        AjaxWar._objRefIds = [];
+        AjaxWar._objRefs = {};
 
         AjaxWar.getNextRef = function () {
-            return 'ajxwr_' + AjaxWar._objRefs.length;
+            return 'ajxwr_' + AjaxWar._objRefIds.length;
         }
         
-        AjaxWar.addRef = function (ref) {
-            AjaxWar._objRefs.push(ref);
+        AjaxWar.addRef = function (id, ref) {
+            AjaxWar._objRefIds.push(id);
+            AjaxWar._objRefs[id] = ref;
+        }
+        
+        AjaxWar.killRef = function(id) {
+            for(var i=0; i<AjaxWar._objRefIds.length; i++) {
+                if( AjaxWar._objRefIds[i] === id ) {
+                    AjaxWar._objRefIds.splice(i,1);
+                    break;
+                }
+            }
+            
+            delete AjaxWar._objRefs[id];
+        }
+        
+        AjaxWar.getUnitById = function(id) {
+            return AjaxWar._objRefs[id];
         }
         
         
@@ -93,11 +110,11 @@
             
             var div = $("<div>").html("");
             div.addClass(unittype);
-            div.css( 'left', mousePos.x + 'px' );
-            div.css( 'top', mousePos.y + 'px' );
+            div.css( 'left', x + 'px' );
+            div.css( 'top', y + 'px' );
             
             div.attr('id', id);
-            AjaxWar.addRef(id); 
+            AjaxWar.addRef(id, this); 
             
             if( unittype === 'tank' ) {
                 div.draggable({
@@ -118,6 +135,8 @@
             });
             
             AjaxWar.util.log('created unit #'+id+' ('+unittype+')');
+            
+            this.div = div;
         }
         
         AjaxWar.Unit.prototype = {
@@ -178,28 +197,36 @@
             return AjaxWar.util.inArray(AjaxWar.ui.indicator.keyMappings, AjaxWar.ui.indicator.cursor);
         }
         
-        AjaxWar.ui.startTankMove = function(id, e, ui) {
+        AjaxWar.ui._ghost = false; //lazy grue is lazy
+        AjaxWar.ui._ghostBuster = function() {
+            if(AjaxWar.ui._ghost) {
+                var id = AjaxWar.ui._ghost.id;
+                $( '#' + id ).remove();
+                AjaxWar.killRef(id);
+            }
             
-            var div = $("<div>").html("");
+            AjaxWar.ui._ghost = false;
+        }
+        
+        AjaxWar.ui.startTankMove = function(id, evt, ui) {
+            AjaxWar.util.log( 'startTankMove: ' + id );
+            AjaxWar.ui._ghostBuster();
             
-            var pos = AjaxWar.util.relPosition("#playingfield", e.pageX, e.pageY);
-                        
-            div.addClass('tank');
+            var myTank = AjaxWar.getUnitById(id);
+            var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'tank', myTank.x, myTank.y);
             
-            div.css( 'left', pos.x + 'px' );
-            div.css( 'top', pos.y + 'px' );
-            div.css( 'opacity', '.5' );
-            
-            div.attr('id', id+'-movement_ghost');
-                        
-            $("#playingfield").prepend(div);
+            ghost.div.css( 'opacity', '.5' );
+            AjaxWar.ui._ghost = ghost;
         }
         
         AjaxWar.ui.endTankMove = function(id, evt, ui) {
-            //debugger;
+            AjaxWar.util.log( 'endTankMove: ' + id );
+            AjaxWar.ui._ghostBuster();
             
-            $('#'+id+'-movement_ghost').remove();
+            var myTank = AjaxWar.getUnitById(id);
             
+            myTank.div.css( 'left', myTank.x + 'px' );
+            myTank.div.css( 'top', myTank.y + 'px' );
         }
         
         $(function(){
@@ -233,6 +260,10 @@
             });
             
             AjaxWar.util.log('ajaxwar initialized');
+            
+            var unit = new AjaxWar.Unit('test-1', 'production', 0, 0);
+            var unit = new AjaxWar.Unit('test-2', 'tower', 100, 100);
+            
         });
     </script>
     
