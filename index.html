@@ -56,6 +56,14 @@
             background-repeat: none;
         }
         
+        #message_queue {
+            position: absolute;
+            top: 10px;
+            right: 320px;
+            height: 60px;
+            width: 500px;
+        }
+        
     </style>
     
     <script type="text/javascript">
@@ -104,21 +112,26 @@
             return false;
         };
         
+        AjaxWar.util.log = function(msg) {
+            $('#message_queue').val( msg + "\n" + $('#message_queue').val() );
+        }
+        
+        AjaxWar.ui.clickUnit = function(id) {
+            debugger;
+        }
+        
         AjaxWar.ui.indicator = {};
         AjaxWar.ui.indicator.clearIndicator = function() {
             $('#tank_indicator').css('border', 'solid 4px white');
             $('#production_indicator').css('border', 'solid 4px white');
             $('#tower_indicator').css('border', 'solid 4px white');
         }
-        
         AjaxWar.ui.indicator.cursor = false;
-        
         AjaxWar.ui.indicator.keyMappings = {
             '1' : 'tank',
             '2' : 'production',
             '3' : 'tower'
         };
-        
         AjaxWar.ui.indicator.isValid = function() {
             return AjaxWar.util.inArray(AjaxWar.ui.indicator.keyMappings, AjaxWar.ui.indicator.cursor);
         }
@@ -144,11 +157,13 @@
                     return;
                 }
                 
+                var unitType = AjaxWar.ui.indicator.cursor;
+                
                 var div = $("<div>").html("");
                 
                 mousePos = AjaxWar.util.relPosition("#playingfield", e.pageX, e.pageY);
                 
-                div.addClass('production');
+                div.addClass(unitType);
                 
                 div.css( 'left', mousePos.x + 'px' );
                 div.css( 'top', mousePos.y + 'px' );
@@ -157,7 +172,9 @@
                 div.attr('id', id);
                 AjaxWar.addRef(id);
                 
-                div.draggable();
+                if( unitType === 'tank' ) {
+                    div.draggable();    
+                }
                 
                 $("#playingfield").prepend(div);
                 
@@ -165,15 +182,20 @@
                     return false;
                 });
                 
+                AjaxWar.util.log('created unit #'+id+' ('+unitType+')');
+                
                 return false;
             });
             
+            AjaxWar.util.log('ajaxwar initialized');
         });
     </script>
     
 </head>
 <body>
     <h1>Ajaxwar: 1982</h1>
+    
+    <textarea id="message_queue"></textarea>
     
     <div id="button_indicator">
         <div id="tank_indicator" class="tank indicator"></div>
