@@ -40,6 +40,22 @@
             
             position: absolute;
         }
+        
+        #button_indicator {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 320px;
+        }
+        
+        .indicator {
+            border: solid 4px white;
+            position: relative;
+            display: inline-block;
+            margin: 6px;
+            background-repeat: none;
+        }
+        
     </style>
     
     <script type="text/javascript">
@@ -59,22 +75,71 @@
         AjaxWar.addRef = function (ref) {
             AjaxWar._objRefs.push(ref);
         }
+        
+        AjaxWar.util = {};
+        AjaxWar.ui = {};
     
-        AjaxWar.relPosition = function (element, mouseX, mouseY) {
+        AjaxWar.util.relPosition = function (element, mouseX, mouseY) {
             var offset = $(element).offset();
             var x = mouseX - offset.left;
             var y = mouseY - offset.top;
             
             return {'x': parseInt(x), 'y': parseInt(y)};
         }
-    
+        
+        AjaxWar.util.inArray = function (haystack, needle) {
+            var i;
+            for (i=0; i < haystack.length; i++) {
+                if (haystack[i] === needle) {
+                     return true;
+                }
+            }
+            return false;
+        };
+        
+        AjaxWar.ui.indicator = {};
+        AjaxWar.ui.indicator.clearIndicator = function() {
+            $('#tank_indicator').css('border', 'solid 4px white');
+            $('#production_indicator').css('border', 'solid 4px white');
+            $('#tower_indicator').css('border', 'solid 4px white');
+        }
+        
+        AjaxWar.ui.indicator.cursor = false;
+        
+        AjaxWar.ui.indicator.keyMappings = {
+            '1' : 'tank',
+            '2' : 'production',
+            '3' : 'tower'
+        };
+        
+        AjaxWar.ui.indicator.isValid = function() {
+            return AjaxWar.util.inArray(AjaxWar.ui.indicator.keyMappings, AjaxWar.ui.indicator.cursor);
+        }
+        
         $(function(){
+            
+            $(document).keypress(function (eh){
+                var key = String.fromCharCode(eh.charCode);
+                
+                var map = AjaxWar.ui.indicator.keyMappings[key];
+                
+                if( map ) {
+                    AjaxWar.ui.indicator.clearIndicator();
+                    
+                    $('#'+map+'_indicator').css('border', 'solid 4px red');
+                    AjaxWar.ui.indicator.cursor = map;
+                }
+            });
+            
             $('#playingfield').click(function(e){
                 
-                var div = $("<div>").html("");
-                //div.className = 'production';
+                if( !AjaxWar.ui.indicator.isValid() ) {
+                    return;
+                }
                 
-                mousePos = AjaxWar.relPosition("#playingfield", e.pageX, e.pageY);
+                var div = $("<div>").html("");
+                
+                mousePos = AjaxWar.util.relPosition("#playingfield", e.pageX, e.pageY);
                 
                 div.addClass('production');
                 
@@ -92,7 +157,7 @@
                 $('#'+id).click(function(e) {
                     return false;
                 });
-
+                
                 return false;
             });
             
@@ -102,12 +167,13 @@
 </head>
 <body>
     <h1>Ajaxwar: 1982</h1>
-    <div id="playingfield">
-
-        <div class="production"></div>
-        <div class="tank"></div>
-        <!-- <div class="tower"></div> -->
-        
+    
+    <div id="button_indicator">
+        <div id="tank_indicator" class="tank indicator"></div>
+        <div id="production_indicator" class="production indicator"></div>
+        <div id="tower_indicator" class="tower indicator"></div>
     </div>
+    
+    <div id="playingfield"></div>
 </body>
 </html>
