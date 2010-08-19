@@ -6,7 +6,11 @@
     <!-- straight out of the jquery "download everything" page... -->
     <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.4.custom.css" rel="stylesheet" />	
     <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script> 
-    <script type="text/javascript" src="js/jquery-ui-1.8.4.custom.min.js"></script> 
+    <script type="text/javascript" src="js/jquery-ui-1.8.4.custom.min.js"></script>
+    
+    <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
+    
+    
     
     <!-- move me later -->
     <style>
@@ -17,7 +21,7 @@
             position: relative;
         }
         
-        .tank {
+        .tank, .ghosttank {
             width: 60px;
             height: 30px;
             background-image: url(i/tank.png);
@@ -29,6 +33,7 @@
             width: 60px;
             height: 60px;
             background-image: url(i/production.png);
+            
             
             position: absolute;
         }
@@ -101,6 +106,24 @@
         }
         
         
+        //////// SVG STUFF
+        AjaxWar.svg = {};
+        AjaxWar.svg._canvas = false;
+        AjaxWar.svg.init = function() {
+            
+            var node = document.getElementById("playingfield");
+            var width = $('#playingfield').width();
+            var height = $('#playingfield').height();
+            
+            AjaxWar.svg._canvas = Raphael(node, width, height);
+        }
+        
+        AjaxWar.svg.makeCircle = function(x,y,r, color) {
+            var circle = AjaxWar.svg._canvas.circle(x,y,r);
+            circle.attr("stroke", color);
+            return circle;
+        }
+        
         //////// Unit Class
         AjaxWar.Unit = function(id, unittype, x, y) {
             this.id = id;
@@ -124,7 +147,11 @@
                     stop: function(evt, ui) {
                         AjaxWar.ui.endTankMove(id, evt, ui);
                     }
-                });    
+                });
+            }
+            
+            if( unittype === 'tank' || unittype === 'tower' ) {
+                this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range, this.radiusColor );
             }
             
             $("#playingfield").prepend(div);
@@ -140,6 +167,8 @@
         }
         
         AjaxWar.Unit.prototype = {
+            radiusColor : '#F00', 
+            range : 50, //range, in pixels
             speed : 50, //pixels per second
             
             calculateTimeToDestination : function(x, y) {
@@ -151,10 +180,9 @@
         };
         //////// End Unit Class
         
-        
         AjaxWar.util = {};
         AjaxWar.ui = {};
-    
+        
         AjaxWar.util.relPosition = function (element, mouseX, mouseY) {
             var offset = $(element).offset();
             var x = mouseX - offset.left;
@@ -220,7 +248,7 @@
             AjaxWar.ui._ghostBuster();
             
             var myTank = AjaxWar.getUnitById(id);
-            var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'tank', myTank.x, myTank.y);
+            var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'ghosttank', myTank.x, myTank.y);
             
             ghost.div.css( 'opacity', '.5' );
             AjaxWar.ui._ghost = ghost;
@@ -242,7 +270,17 @@
             myTank.div.animate({ 
                 left: endPos.x,
                 top: endPos.y,
-                }, animTime
+                }, {
+                    duration : animTime,
+                    step :  function(evt,obj) { 
+                        myTank.x = myTank.div.position().left;
+                        myTank.y = myTank.div.position().top;
+                        
+                        //AjaxWar.util.log(myTank.x+','+myTank.y);
+                        
+                        myTank.rangeCircle.animate({cx:myTank.x, cy:myTank.y}, 0)
+                    }
+                } 
             );
         }
         
@@ -277,10 +315,8 @@
             });
             
             AjaxWar.util.log('ajaxwar initialized');
-            
-            var unit = new AjaxWar.Unit('test-1', 'production', 0, 0);
-            var unit = new AjaxWar.Unit('test-2', 'tower', 100, 100);
-            
+                        
+            AjaxWar.svg.init();
         });
     </script>
     
