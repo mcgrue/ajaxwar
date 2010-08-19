@@ -138,12 +138,28 @@
         
 
 
-        AjaxWar.ui.startTankMove = function(id, evt, ui) {
+        AjaxWar.ui.startTankMove = function(id, e, ui) {
             
+            var div = $("<div>").html("");
+            
+            var pos = AjaxWar.util.relPosition("#playingfield", e.pageX, e.pageY);
+                        
+            div.addClass('tank');
+            
+            div.css( 'left', pos.x + 'px' );
+            div.css( 'top', pos.y + 'px' );
+            div.css( 'opacity', '.5' );
+            
+            div.attr('id', id+'-movement_ghost');
+                        
+            $("#playingfield").prepend(div);
         }
         
         AjaxWar.ui.endTankMove = function(id, evt, ui) {
             //debugger;
+            
+            $('#'+id+'-movement_ghost').remove();
+            
         }
         
         $(function(){
