@@ -105,7 +105,6 @@
             return AjaxWar._objRefs[id];
         }
         
-        
         //////// SVG STUFF
         AjaxWar.svg = {};
         AjaxWar.svg._canvas = false;
@@ -176,6 +175,18 @@
                 var y = Math.pow((this.y - y), 2);
                 var d = Math.sqrt(x+y);
                 return (d / this.speed) * 1000;
+            },
+            
+            move : function(x, y) {
+                this.x = x;
+                this.y = y;
+                
+                this.div.css( 'left', x + 'px' );
+                this.div.css( 'top', y + 'px' );
+                
+                if( this.rangeCircle ) {
+                    this.rangeCircle.animate({cx:this.x, cy:this.y}, 0);
+                }
             }
         };
         //////// End Unit Class
