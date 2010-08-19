@@ -117,7 +117,7 @@
         }
         
         AjaxWar.ui.clickUnit = function(id) {
-            debugger;
+            AjaxWar.util.log('CLICKED UNIT ' + id);
         }
         
         AjaxWar.ui.indicator = {};
@@ -134,6 +134,16 @@
         };
         AjaxWar.ui.indicator.isValid = function() {
             return AjaxWar.util.inArray(AjaxWar.ui.indicator.keyMappings, AjaxWar.ui.indicator.cursor);
+        }
+        
+
+
+        AjaxWar.ui.startTankMove = function(id, evt, ui) {
+            
+        }
+        
+        AjaxWar.ui.endTankMove = function(id, evt, ui) {
+            //debugger;
         }
         
         $(function(){
@@ -173,12 +183,20 @@
                 AjaxWar.addRef(id);
                 
                 if( unitType === 'tank' ) {
-                    div.draggable();    
+                    div.draggable({
+                        start: function(evt, ui) {
+                            AjaxWar.ui.startTankMove(id, evt, ui);
+                        },
+                        stop: function(evt, ui) {
+                            AjaxWar.ui.endTankMove(id, evt, ui);
+                        }
+                    });    
                 }
                 
                 $("#playingfield").prepend(div);
                 
                 $('#'+id).click(function(e) {
+                    AjaxWar.ui.clickUnit(id);
                     return false;
                 });
                 
