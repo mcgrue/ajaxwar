@@ -1,0 +1,266 @@
+<html>
+  <head>
+    <title>AjaxWar Battle</title>
+    <style type="text/css">
+      body { margin: 0px; padding: 20px; font-family: verdana; }
+      #screen { width: 100%; height: 100%; background: url(/static/loading.gif) white no-repeat center;}
+      .box { width: 50px; height: 50px; position: absolute; }
+      .chat { font-size: small; width: 150px; position: relative; bottom: 100px; height: 100px;}
+      /*.chat .wrap { position: absolute; bottom: 0px;}*/
+      form { position: absolute; bottom: 5px; left: 24px; width: 95%; display: inline;}
+      input { width: 95%; border: 0px; font-size: 14px;}
+    </style>
+    <script type="text/javascript" src="http://www.twiliort.com/v1/realtime-client.js"></script>
+    <script type="text/javascript" src="/static/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+      var battle = null;
+      var lobby = null;
+      
+      var Lobby = function(size, startGame) {
+        this.size = size;
+        this.state = 'joining'; // joining, waiting, playing
+        this.isHost = null;
+        this.clientId = Math.floor(Math.random()*2048).toString(16);
+        this.clients = [];
+        //this.host = null;
+        this.startGame = startGame;
+      }
+      Lobby.prototype = {
+        send: function(type, data) {
+          if (!data) { data = {} }
+          data['type'] = type;
+          data['client'] = this.clientId;
+          $.post('?send', data);
+        },
+        receive: function(message) {
+          if (message.client != this.clientId) {
+              this['on'+message.type](message);
+          }
+        },
+        join: function() {
+          this.state = 'joining';
+          this.send('join')
+          if (this.isHost == null) {
+            lobby = this;
+            setTimeout(function() { 
+              if (lobby.isHost == null) {
+                lobby.send('host');
+                lobby.isHost = true;
+                console.log("Became host.");
+                lobby.clients.push(lobby.id);
+                lobby.onwait();
+              }
+            }, 3000);
+          }
+        },
+        onhost: function(event) { 
+          // Master has appeared, rejoin
+          this.isHost = false;
+          this.join(); 
+        },
+        onjoin: function(event) {
+          if (this.isHost) {
+            if (this.state == 'waiting') {
+              this.clients.push(event.client);
+              console.log("Player joined");
+              if (this.clients.length == this.size) {
+                this.play();
+              } else {
+                this.send('wait');
+              }
+            } 
+            else if (this.state == 'playing') {
+              this.send('playing');
+            }
+          }
+        },
+        onplaying: function(event) {
+          if (this.state == 'joining') {
+            this.isHost = false;
+            console.log("Game in session");
+          }
+        },
+        onwait: function(event) {
+          if (this.isHost == null) { this.isHost = false; }
+          console.log("Waiting for clients...")
+          this.state = 'waiting';
+        },
+        play: function() {
+          this.send('play');
+          this.onplay();
+        },
+        onplay: function(event) {
+          if (this.isHost == null) { this.isHost = false; }
+          this.state = 'playing';
+          this.startGame(this);
+        },
+      }
+      
+      var Game = function(playerCount, clientId, isHost) {
+        this.isHost = isHost;
+        this.playerCount = playerCount;
+        this.clientId = clientId;
+        this.remotes = [];
+      }
+      Game.prototype = {
+        send: function(type, data) {
+          if (!data) { data = {} }
+          data['type'] = type;
+          data['client'] = this.clientId;
+          $.post('?send', data);
+        },
+        
+        receive: function(message) {
+          if (message.client != this.clientId) {
+            try {
+              this['on'+message.type](message);
+            } catch(e) {
+              console.error('no handler for '+message.type);
+            }
+          }
+        },
+        
+        onjoin: function(event) {
+          if (this.isHost) {
+            this.send('playing');
+          }
+        },
+        
+        start: function() { 
+          console.log("Starting game...");
+          $('#screen').css('background-image', 'none');
+          $('form input').focus();
+          //$.post('?send', {type: 'enter', player: this.player}); 
+        },
+        
+        isRemote: function(id) { 
+          return (this.remotes.indexOf(id) != -1);
+        },
+        
+        onenter: function(event) {
+          if (!this.isRemote(event.player)) {
+            this.createRemote(event.player);
+            if (this.isHost) { 
+              // Enslave them
+              $.post('?send', {type: 'enslave', player: this.player});
+            }
+          }
+        },
+        
+        
+        createRemote: function(id) {
+          console.log("Player '"+id+"' joined");
+          this.remotes.push(id);
+        },
+        
+        sendChat: function(chat) {
+          this.send('chat', {chat: chat});
+        },
+        
+        onchat: function(event) {
+          console.log(event.client+": "+event.chat);
+          displayChat(event.client, event.chat);
+        },
+      };
+      
+      $(document).ready(function() {
+        lobby = new Lobby(3, function() { 
+          game = new Game(lobby.size, lobby.id, lobby.isHost);
+          game.start();
+        });
+        
+        Realtime.init("{{account_sid}}", {accessToken: "{{access_token}}"});
+        Realtime.listen("/{{battle}}", {
+          onconnect: function() {
+            lobby.join();
+          },
+          ondisconnect: function() {
+            console.error("disconnected.");
+          },
+          onerror: function(reason) {
+            console.error(reason);
+          },
+          onmessage: function(msg) {
+            if (lobby.state == 'playing') {
+              game.receive(msg);
+            } else {
+              lobby.receive(msg);
+            }
+          },
+        });
+
+        
+      })
+      
+      function setupColor() {
+        function colorByte() { return (rnd(128)+64).toString(16); }
+        color = colorByte() + colorByte() + colorByte();
+        $('body').css('background', '#'+color);
+        return color;
+      }
+      
+      
+      function getNormalPosition(id) {
+        return normalizePosition($('#'+id)[0])
+      }
+      
+      function setNormalPosition(id, x, y) {
+        var pos = denormalizePosition(x, y);
+        $('#'+id).css('left', pos.x);
+        $('#'+id).css('top', pos.y);
+      }
+      
+      function displayChat(id, text) {
+        var chatId = 'chat-' + Date.now().toString();
+        $('#chat').append('<div id="'+chatId+'">'+id+': '+text+'</div>');
+        setTimeout(function(){ $('#'+chatId).remove(); }, 5000);
+      }
+      
+      function sendChat() {
+        var chat = $('input').val();
+        displayChat('me', chat);
+        console.log("me: "+chat);
+        battle.sendChat(chat);
+        $('input').val('');
+        return false;
+      }
+      
+      
+      function defined(o) {
+        return (typeof(o)!="undefined");
+      }
+      
+      function rgb2hex(rgbString) {
+          if (typeof(rgbString)!="string" || !defined(rgbString.match)) { return null; }
+          var result = rgbString.match(/^\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/);
+          if (result==null) { return rgbString; }
+          var rgb = +result[1] << 16 | +result[2] << 8 | +result[3];
+          var hex = "";
+          var digits = "0123456789abcdef";
+          while(rgb!=0) { 
+            hex = digits.charAt(rgb&0xf)+hex; 
+            rgb>>>=4; 
+          } 
+          while(hex.length<6) { hex='0'+hex; }
+          return "#" + hex;
+        }
+      
+      function normalizePosition(el) { 
+        return {x: el.offsetLeft/$('body')[0].offsetWidth, y: el.offsetTop/$('body')[0].offsetHeight} }
+      function denormalizePosition(x,y) {
+        return {x: x * $('body')[0].offsetWidth, y: y * $('body')[0].offsetHeight}
+      }
+      function rnd(num) { return Math.floor(Math.random()*num); }
+      function trace(s) { 
+        try { console.log(s) } catch (e) { } 
+      }
+    </script>
+  </head>
+  <body onclick="$('input').focus()">
+    <div id="screen">
+      <div id="chat"></div>
+    </div>
+    <form onsubmit="return sendChat()"><input type="text" /></form>
+  </body>
+</html>

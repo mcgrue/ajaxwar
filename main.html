@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>AjaxWar2</title>
+    <style type="text/css">
+      body { margin: 0px; padding: 20px; font-family: verdana; }
+      #screen { position:absolute; top: 20px; bottom: 20px; left: 20px; right: 20px; background-color: white; text-align: center;}
+      h1 { padding-top: 100px;}
+    </style>
+    <script type="text/javascript" src="/static/jquery.min.js"></script>
+    <script type="text/javascript">
+      function rnd(num) { return Math.floor(Math.random()*num); }
+      function changeColor() {
+        function colorByte() { return (rnd(128)+64).toString(16); }
+        color = colorByte() + colorByte() + colorByte();
+        $('body').css('background', '#'+color);
+        setTimeout(changeColor, 1000);
+      }
+      $(document).ready(function() {
+        changeColor();
+      });
+    </script>
+  </head>
+  <body>
+    <div id="screen">
+    <h1>AjaxWar2 - The Cometing</h1>
+    <form method="post">
+      <input type="submit" value="Start a new battle" />
+    </form>
+    <div style="width: 40%; margin-left: auto; margin-right: auto;">Once in a battle room, share the URL, and when a friend joins your battle will begin!</div>
+    </div>
+  </body>
+</html>
