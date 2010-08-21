@@ -36,7 +36,9 @@ class BattleHandler(webapp.RequestHandler):
     def post(self, battle):
         if self.request.query_string == 'send':
             resp = urlfetch.fetch('https://%s.twiliort.com/%s' % (ACCOUNT_SID, battle), method='POST', 
-                headers={"Authorization": "Basic "+base64.b64encode('%s:' % memcache.get(battle))},
+                headers={
+                    "Authorization": "Basic "+base64.b64encode('%s:' % memcache.get(battle)),
+                    "Content-Type": self.request.headers['content-type']},
                 payload=self.request.body)
             logging.info(resp.content)
 

@@ -5,32 +5,39 @@
       body { margin: 0px; padding: 20px; font-family: verdana; }
       #screen { width: 100%; height: 100%; background: url(/static/loading.gif) white no-repeat center;}
       .box { width: 50px; height: 50px; position: absolute; }
+      #chat { top: 20px; position: absolute;}
       .chat { font-size: small; width: 150px; position: relative; bottom: 100px; height: 100px;}
       /*.chat .wrap { position: absolute; bottom: 0px;}*/
       form { position: absolute; bottom: 5px; left: 24px; width: 95%; display: inline;}
       input { width: 95%; border: 0px; font-size: 14px;}
     </style>
+    <link rel="stylesheet" href="static/style.css" type="text/css" />
+    <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
     <script type="text/javascript" src="http://www.twiliort.com/v1/realtime-client.js"></script>
     <script type="text/javascript" src="/static/js/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="/static/js/jquery-ui-1.8.4.custom.min.js"></script>
     <script type="text/javascript" src="/static/js/lobby.js"></script>
     <script type="text/javascript" src="/static/js/util.js"></script>
+    <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
       var game = null;
       var lobby = null;
+      var color = null;
             
       var Game = function(playerCount, clientId, isHost) {
         this.isHost = isHost;
         this.playerCount = playerCount;
         this.clientId = clientId;
         this.remotes = [];
+        this.nicks = {};
       }
       Game.prototype = {
         send: function(type, data) {
-          if (!data) { data = {} }
+          if (!data) data = {};
           data['type'] = type;
           data['client'] = this.clientId;
-          $.post('?send', data);
+          $.ajaxSetup({contentType: 'application/json'});
+          $.post('?send', JSON.stringify(data));
         },
         
         receive: function(message) {
@@ -53,6 +60,7 @@
           console.log("Starting game...");
           $('#screen').css('background-image', 'none');
           $('form input').focus();
+          AjaxWar.init('screen', color, this);
           //$.post('?send', {type: 'enter', player: this.player}); 
         },
         
@@ -70,6 +78,15 @@
           }
         },
         
+        onunitcreate: function(event) {
+          var unit = new AjaxWar.Unit(event.unit.id, event.unit.type, event.unit.x, event.unit.y, event.unit.id.split('_')[0]);
+        },
+        
+        onunitmove: function(event) {
+          var unit = AjaxWar.getUnitById(event.unit.id);
+          unit.move(event.x, event.y);
+        },
+        
         
         createRemote: function(id) {
           console.log("Player '"+id+"' joined");
@@ -81,12 +98,25 @@
         },
         
         onchat: function(event) {
-          console.log(event.client+": "+event.chat);
-          displayChat(event.client, event.chat);
+          var nick = (this.nicks.hasOwnProperty(event.client)) ? this.nicks[event.client] : event.client;
+          console.log(nick+": "+event.chat);
+          displayChat(nick, event.chat);
+        },
+        
+        setNick: function(nick) {
+          this.nicks[this.clientId] = nick;
+          this.send('nick', {'nick': nick});
+        },
+        
+        onnick: function(event) {
+          var nick = (this.nicks.hasOwnProperty(event.client)) ? this.nicks[event.client] : event.client;
+          displayChat(nick, ": changed name to "+event.nick);
+          this.nicks[event.client] = event.nick;
         },
       };
       
       $(document).ready(function() {
+        color = setupColor();
         lobby = new Lobby(2, function() { 
           game = new Game(lobby.size, lobby.clientId, lobby.isHost);
           game.start();
@@ -141,9 +171,15 @@
       
       function sendChat() {
         var chat = $('input').val();
-        displayChat('me', chat);
-        console.log("me: "+chat);
-        game.sendChat(chat);
+        if (chat.indexOf("/nick ") != -1) {
+          var nick = chat.split(' ')[1];
+          console.log("setting nick: "+nick);
+          game.setNick(nick);
+        } else {
+          displayChat('me', chat);
+          console.log("me: "+chat);
+          game.sendChat(chat);
+        }
         $('input').val('');
         return false;
       }
@@ -158,6 +194,11 @@
     </script>
   </head>
   <body onclick="$('input').focus()">
+    <div id="button_indicator">
+        <div id="tank_indicator" class="tank indicator"></div>
+        <div id="production_indicator" class="production indicator"></div>
+        <div id="tower_indicator" class="tower indicator"></div>
+    </div>
     <div id="screen">
       <div id="chat"></div>
     </div>
