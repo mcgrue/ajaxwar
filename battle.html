@@ -24,10 +24,11 @@
         this.playerCount = playerCount;
         this.clientId = clientId;
         this.remotes = [];
+        this.nicks = {};
       }
       Game.prototype = {
         send: function(type, data) {
-          if (!data) { data = {} }
+          if (!data) data = {};
           data['type'] = type;
           data['client'] = this.clientId;
           $.post('?send', data);
@@ -81,8 +82,20 @@
         },
         
         onchat: function(event) {
-          console.log(event.client+": "+event.chat);
-          displayChat(event.client, event.chat);
+          var nick = (this.nicks.hasOwnProperty(event.client)) ? this.nicks[event.client] : event.client;
+          console.log(nick+": "+event.chat);
+          displayChat(nick, event.chat);
+        },
+        
+        setNick: function(nick) {
+          this.nicks[this.clientId] = nick;
+          this.send('nick', {'nick': nick});
+        },
+        
+        onnick: function(event) {
+          var nick = (this.nicks.hasOwnProperty(event.client)) ? this.nicks[event.client] : event.client;
+          displayChat(nick, ": changed name to "+event.nick);
+          this.nicks[event.client] = event.nick;
         },
       };
       
@@ -141,9 +154,15 @@
       
       function sendChat() {
         var chat = $('input').val();
-        displayChat('me', chat);
-        console.log("me: "+chat);
-        game.sendChat(chat);
+        if (chat.indexOf("/nick ") != -1) {
+          var nick = chat.split(' ')[1];
+          console.log("setting nick: "+nick);
+          game.setNick(nick);
+        } else {
+          displayChat('me', chat);
+          console.log("me: "+chat);
+          game.sendChat(chat);
+        }
         $('input').val('');
         return false;
       }
