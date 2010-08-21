@@ -1,8 +1,4 @@
-if( typeof AjaxWar == 'undefined' ) {
-    AjaxWar = {};
-} else {
-    throw "Ajaxwar was already defined.  Someone probably did bad copy/pasting.";
-}
+AjaxWar = {};
 
 AjaxWar._objRefIds = [];
 AjaxWar._objRefs = {};
@@ -92,7 +88,7 @@ AjaxWar.Unit = function(id, unittype, x, y, color) {
         return false;
     });
     
-    AjaxWar.util.log('created unit #'+id+' ('+unittype+')');
+    log('created unit #'+id+' ('+unittype+')');
     
     this.div = div;
 }
@@ -120,9 +116,7 @@ AjaxWar.Unit.prototype = {
               step :  function(evt,obj) { 
                   tank.x = tank.div.position().left;
                   tank.y = tank.div.position().top;
-
-                  //AjaxWar.util.log(myTank.x+','+myTank.y);
-
+                  
                   tank.rangeCircle.animate({cx:tank.x, cy:tank.y}, 0)
               }
           } 
@@ -174,13 +168,8 @@ AjaxWar.util.count = function( obj ) {
     return count;
 }
 
-AjaxWar.util.log = function(msg) {
-    //$('#message_queue').val( msg + "\n" + $('#message_queue').val() );
-    log(msg); // see util.js
-}
-
 AjaxWar.ui.clickUnit = function(id) {
-    AjaxWar.util.log('CLICKED UNIT ' + id);
+    log('CLICKED UNIT ' + id);
 }
 
 AjaxWar.ui.indicator = {};
@@ -227,7 +216,7 @@ AjaxWar.ui._ghostBuster = function() {
 }
 
 AjaxWar.ui.dragTank = function(id, evt, ui) {
-    AjaxWar.util.log( 'startTankMove: ' + id );
+    log( 'startTankMove: ' + id );
     AjaxWar.ui._ghostBuster();
     
     var myTank = AjaxWar.getUnitById(id);
@@ -238,7 +227,7 @@ AjaxWar.ui.dragTank = function(id, evt, ui) {
 }
 
 AjaxWar.ui.dropTank = function(id, evt, ui) {
-    AjaxWar.util.log( 'endTankMove: ' + id );
+    log( 'endTankMove: ' + id );
     AjaxWar.ui._ghostBuster();
     
     var myTank = AjaxWar.getUnitById(id);
@@ -294,6 +283,5 @@ AjaxWar.init = function(playfieldId, color, game) {
     
     AjaxWar.svg.init();
     
-    AjaxWar.util.log('ajaxwar initialized');
-    
+    log('ajaxwar initialized');
 }
