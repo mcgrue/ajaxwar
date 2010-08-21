@@ -11,92 +11,14 @@
       input { width: 95%; border: 0px; font-size: 14px;}
     </style>
     <script type="text/javascript" src="http://www.twiliort.com/v1/realtime-client.js"></script>
-    <script type="text/javascript" src="/static/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-ui-1.8.4.custom.min.js"></script>
+    <script type="text/javascript" src="/static/js/lobby.js"></script>
+    <script type="text/javascript" src="/static/js/util.js"></script>
     <script type="text/javascript">
-      var battle = null;
+      var game = null;
       var lobby = null;
-      
-      var Lobby = function(size, startGame) {
-        this.size = size;
-        this.state = 'joining'; // joining, waiting, playing
-        this.isHost = null;
-        this.clientId = Math.floor(Math.random()*2048).toString(16);
-        this.clients = [];
-        //this.host = null;
-        this.startGame = startGame;
-      }
-      Lobby.prototype = {
-        send: function(type, data) {
-          if (!data) { data = {} }
-          data['type'] = type;
-          data['client'] = this.clientId;
-          $.post('?send', data);
-        },
-        receive: function(message) {
-          if (message.client != this.clientId) {
-              this['on'+message.type](message);
-          }
-        },
-        join: function() {
-          this.state = 'joining';
-          this.send('join')
-          if (this.isHost == null) {
-            lobby = this;
-            setTimeout(function() { 
-              if (lobby.isHost == null) {
-                lobby.send('host');
-                lobby.isHost = true;
-                console.log("Became host.");
-                lobby.clients.push(lobby.id);
-                lobby.onwait();
-              }
-            }, 3000);
-          }
-        },
-        onhost: function(event) { 
-          // Master has appeared, rejoin
-          this.isHost = false;
-          this.join(); 
-        },
-        onjoin: function(event) {
-          if (this.isHost) {
-            if (this.state == 'waiting') {
-              this.clients.push(event.client);
-              console.log("Player joined");
-              if (this.clients.length == this.size) {
-                this.play();
-              } else {
-                this.send('wait');
-              }
-            } 
-            else if (this.state == 'playing') {
-              this.send('playing');
-            }
-          }
-        },
-        onplaying: function(event) {
-          if (this.state == 'joining') {
-            this.isHost = false;
-            console.log("Game in session");
-          }
-        },
-        onwait: function(event) {
-          if (this.isHost == null) { this.isHost = false; }
-          console.log("Waiting for clients...")
-          this.state = 'waiting';
-        },
-        play: function() {
-          this.send('play');
-          this.onplay();
-        },
-        onplay: function(event) {
-          if (this.isHost == null) { this.isHost = false; }
-          this.state = 'playing';
-          this.startGame(this);
-        },
-      }
-      
+            
       var Game = function(playerCount, clientId, isHost) {
         this.isHost = isHost;
         this.playerCount = playerCount;
@@ -165,8 +87,8 @@
       };
       
       $(document).ready(function() {
-        lobby = new Lobby(3, function() { 
-          game = new Game(lobby.size, lobby.id, lobby.isHost);
+        lobby = new Lobby(2, function() { 
+          game = new Game(lobby.size, lobby.clientId, lobby.isHost);
           game.start();
         });
         
@@ -221,40 +143,18 @@
         var chat = $('input').val();
         displayChat('me', chat);
         console.log("me: "+chat);
-        battle.sendChat(chat);
+        game.sendChat(chat);
         $('input').val('');
         return false;
       }
       
-      
-      function defined(o) {
-        return (typeof(o)!="undefined");
-      }
-      
-      function rgb2hex(rgbString) {
-          if (typeof(rgbString)!="string" || !defined(rgbString.match)) { return null; }
-          var result = rgbString.match(/^\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/);
-          if (result==null) { return rgbString; }
-          var rgb = +result[1] << 16 | +result[2] << 8 | +result[3];
-          var hex = "";
-          var digits = "0123456789abcdef";
-          while(rgb!=0) { 
-            hex = digits.charAt(rgb&0xf)+hex; 
-            rgb>>>=4; 
-          } 
-          while(hex.length<6) { hex='0'+hex; }
-          return "#" + hex;
-        }
       
       function normalizePosition(el) { 
         return {x: el.offsetLeft/$('body')[0].offsetWidth, y: el.offsetTop/$('body')[0].offsetHeight} }
       function denormalizePosition(x,y) {
         return {x: x * $('body')[0].offsetWidth, y: y * $('body')[0].offsetHeight}
       }
-      function rnd(num) { return Math.floor(Math.random()*num); }
-      function trace(s) { 
-        try { console.log(s) } catch (e) { } 
-      }
+
     </script>
   </head>
   <body onclick="$('input').focus()">
