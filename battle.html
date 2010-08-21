@@ -10,14 +10,18 @@
       form { position: absolute; bottom: 5px; left: 24px; width: 95%; display: inline;}
       input { width: 95%; border: 0px; font-size: 14px;}
     </style>
+    <link rel="stylesheet" href="static/style.css" type="text/css" />
+    <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
     <script type="text/javascript" src="http://www.twiliort.com/v1/realtime-client.js"></script>
     <script type="text/javascript" src="/static/js/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="/static/js/jquery-ui-1.8.4.custom.min.js"></script>
     <script type="text/javascript" src="/static/js/lobby.js"></script>
     <script type="text/javascript" src="/static/js/util.js"></script>
+    <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
       var game = null;
       var lobby = null;
+      var color = null;
             
       var Game = function(playerCount, clientId, isHost) {
         this.isHost = isHost;
@@ -54,6 +58,7 @@
           console.log("Starting game...");
           $('#screen').css('background-image', 'none');
           $('form input').focus();
+          AjaxWar.init('screen', color);
           //$.post('?send', {type: 'enter', player: this.player}); 
         },
         
@@ -100,6 +105,7 @@
       };
       
       $(document).ready(function() {
+        color = setupColor();
         lobby = new Lobby(2, function() { 
           game = new Game(lobby.size, lobby.clientId, lobby.isHost);
           game.start();
@@ -177,6 +183,11 @@
     </script>
   </head>
   <body onclick="$('input').focus()">
+    <div id="button_indicator">
+        <div id="tank_indicator" class="tank indicator"></div>
+        <div id="production_indicator" class="production indicator"></div>
+        <div id="tower_indicator" class="tower indicator"></div>
+    </div>
     <div id="screen">
       <div id="chat"></div>
     </div>

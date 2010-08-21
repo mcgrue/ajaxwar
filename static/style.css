@@ -1,0 +1,56 @@
+#playingfield {
+    left: 0px;
+    right: 0px;
+    width: 1000px;
+    height: 500px;
+    background-color: #DDD;
+    position: relative;
+    overflow:  hidden;
+}
+
+.tank, .ghosttank {
+    width: 60px;
+    height: 30px;
+    background-image: url(tank.png);
+    
+    position: absolute;
+}
+
+.production {
+    width: 60px;
+    height: 60px;
+    background-image: url(production.png);
+    
+    position: absolute;
+}
+
+.tower {
+    width: 60px;
+    height: 60px;
+    background-image: url(turret.png);
+    
+    position: absolute;
+}
+
+#button_indicator {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 320px;
+}
+
+.indicator {
+    border: solid 4px white;
+    position: relative;
+    display: inline-block;
+    margin: 6px;
+    background-repeat: none;
+}
+
+#message_queue {
+    position: absolute;
+    top: 10px;
+    right: 320px;
+    height: 60px;
+    width: 500px;
+}
