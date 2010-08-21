@@ -15,10 +15,13 @@
     <!-- move me later -->
     <style>
         #playingfield {
+            left: 0px;
+            right: 0px;
             width: 1000px;
             height: 500px;
             background-color: #DDD;
             position: relative;
+            overflow:  hidden;
         }
         
         .tank, .ghosttank {
@@ -33,7 +36,6 @@
             width: 60px;
             height: 60px;
             background-image: url(i/production.png);
-            
             
             position: absolute;
         }
@@ -147,6 +149,8 @@
                         AjaxWar.ui.endTankMove(id, evt, ui);
                     }
                 });
+                
+                div.css('position', 'absolute'); // no, jquery, I don't want draggable things to always be relative.
             }
             
             if( unittype === 'tank' || unittype === 'tower' ) {
@@ -321,12 +325,12 @@
                 mousePos = AjaxWar.util.relPosition("#playingfield", e.pageX, e.pageY);
                 
                 var unit = new AjaxWar.Unit(id, unitType, mousePos.x, mousePos.y);
-                                                
+                
                 return false;
             });
             
             AjaxWar.util.log('ajaxwar initialized');
-                        
+            
             AjaxWar.svg.init();
         });
     </script>
