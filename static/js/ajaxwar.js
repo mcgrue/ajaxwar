@@ -8,7 +8,7 @@ AjaxWar._objRefIds = [];
 AjaxWar._objRefs = {};
 
 AjaxWar.getNextRef = function () {
-    return 'ajxwr_' + AjaxWar._objRefIds.length;
+    return AjaxWar.playerColor + '_' + AjaxWar._objRefIds.length;
 }
 
 AjaxWar.addRef = function (id, ref) {
@@ -127,7 +127,11 @@ AjaxWar.Unit.prototype = {
               }
           } 
       );
-    }
+    },
+    
+    serialize: function() {
+      return {id: this.id, type: this.type, x: this.x, y: this.y};  
+    },
 };
 //////// End Unit Class
 
@@ -245,11 +249,13 @@ AjaxWar.ui.dropTank = function(id, evt, ui) {
     endPos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, evt.pageX, evt.pageY);
     
     myTank.move(endPos.x, endPos.y);
+    AjaxWar.game.send('unitmove', {'unit': myTank.serialize(), 'x': endPos.x, 'y': endPos.y});
 }
 
-AjaxWar.init = function(playfieldId, color) {
+AjaxWar.init = function(playfieldId, color, game) {
     AjaxWar.playfieldId = playfieldId;
     AjaxWar.playerColor = color;
+    AjaxWar.game = game;
     
     $(document).keypress(function (eh){
         var key = parseInt(String.fromCharCode(eh.charCode));
@@ -266,6 +272,7 @@ AjaxWar.init = function(playfieldId, color) {
         mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
     
         var unit = new AjaxWar.Unit(id, unitType, mousePos.x, mousePos.y);
+        AjaxWar.game.send('unitcreate', {'unit': unit.serialize()});
     
         return false;
     });

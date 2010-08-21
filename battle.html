@@ -35,7 +35,8 @@
           if (!data) data = {};
           data['type'] = type;
           data['client'] = this.clientId;
-          $.post('?send', data);
+          $.ajaxSetup({contentType: 'application/json'});
+          $.post('?send', JSON.stringify(data));
         },
         
         receive: function(message) {
@@ -58,7 +59,7 @@
           console.log("Starting game...");
           $('#screen').css('background-image', 'none');
           $('form input').focus();
-          AjaxWar.init('screen', color);
+          AjaxWar.init('screen', color, this);
           //$.post('?send', {type: 'enter', player: this.player}); 
         },
         
@@ -74,6 +75,15 @@
               $.post('?send', {type: 'enslave', player: this.player});
             }
           }
+        },
+        
+        onunitcreate: function(event) {
+          var unit = new AjaxWar.Unit(event.unit.id, event.unit.type, event.unit.x, event.unit.y, event.unit.id.split('_')[0]);
+        },
+        
+        onunitmove: function(event) {
+          var unit = AjaxWar.getUnitById(event.unit.id);
+          unit.move(event.x, event.y);
         },
         
         
