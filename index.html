@@ -9,8 +9,6 @@
     
     <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
     
-    
-    
     <!-- move me later -->
     <style>
         #playingfield {
@@ -222,6 +220,17 @@
             return false;
         };
         
+        AjaxWar.util.count = function( obj ) {
+            var count = 0;
+            for( var k in obj ) {
+                if( obj.hasOwnProperty(k) ) {
+                   ++count;
+                }
+            }
+            
+            return count;
+        }
+        
         AjaxWar.util.log = function(msg) {
             $('#message_queue').val( msg + "\n" + $('#message_queue').val() );
         }
@@ -236,15 +245,31 @@
             $('#production_indicator').css('border', 'solid 4px white');
             $('#tower_indicator').css('border', 'solid 4px white');
         }
-        AjaxWar.ui.indicator.cursor = false;
+        
+        AjaxWar.ui.indicator.cursor_idx = 0;
+        AjaxWar.ui.indicator.cursor = 'not_a_unit';
         AjaxWar.ui.indicator.keyMappings = {
-            '1' : 'tank',
-            '2' : 'production',
-            '3' : 'tower'
+            1 : 'tank',
+            2 : 'production',
+            3 : 'tower'
         };
         AjaxWar.ui.indicator.isValid = function() {
             return AjaxWar.util.inArray(AjaxWar.ui.indicator.keyMappings, AjaxWar.ui.indicator.cursor);
         }
+        
+        AjaxWar.ui.updateSelector = function(key) {
+            var map = AjaxWar.ui.indicator.keyMappings[key];
+            
+            if( map ) {
+                AjaxWar.ui.indicator.clearIndicator();
+                
+                $('#'+map+'_indicator').css('border', 'solid 4px red');
+                AjaxWar.ui.indicator.cursor_idx = +key;
+                AjaxWar.ui.indicator.cursor = map;
+            }            
+        }
+        
+        AjaxWar.ui.updateSelector(1);
         
         AjaxWar.ui._ghost = false; //lazy grue is lazy
         AjaxWar.ui._ghostBuster = function() {
@@ -301,20 +326,13 @@
         $(function(){
             
             $(document).keypress(function (eh){
-                var key = String.fromCharCode(eh.charCode);
+                var key = parseInt(String.fromCharCode(eh.charCode));
                 
-                var map = AjaxWar.ui.indicator.keyMappings[key];
-                
-                if( map ) {
-                    AjaxWar.ui.indicator.clearIndicator();
-                    
-                    $('#'+map+'_indicator').css('border', 'solid 4px red');
-                    AjaxWar.ui.indicator.cursor = map;
-                }
+                AjaxWar.ui.updateSelector(key);
             });
             
             $('#playingfield').click(function(e){
-                
+
                 if( !AjaxWar.ui.indicator.isValid() ) {
                     return;
                 }
@@ -332,6 +350,24 @@
             
             AjaxWar.svg.init();
         });
+        
+    $(document).ready(function() {
+        $(document).bind('contextmenu', function(e) {
+            
+            AjaxWar.ui.indicator.cursor_idx
+            
+            AjaxWar.ui.indicator.cursor_idx++;
+            
+            if( AjaxWar.ui.indicator.cursor_idx > AjaxWar.util.count(AjaxWar.ui.indicator.keyMappings) ) {
+                AjaxWar.ui.indicator.cursor_idx = 1;
+            }
+            
+            AjaxWar.ui.updateSelector(AjaxWar.ui.indicator.cursor_idx);
+            
+            return false;
+        });
+    });
+        
     </script>
     
 </head>
