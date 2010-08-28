@@ -20,7 +20,7 @@
     <script type="text/javascript" src="/static/js/util.js"></script>
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
-      var TIMEOUT = 15000;
+      var TIMEOUT = 10000;
       var game = null;
       var lobby = null;
       var state = 'lobby';
@@ -31,11 +31,16 @@
         this.id = id;
         this.nick = nick;
         this.color = color;
-        
+        this.units = [];
       }
       Player.prototype = {
         getName: function() {
           return (this.nick) ? this.nick : this.id;
+        },
+        createUnit: function(id, type, x, y) {
+          var unit = new AjaxWar.Unit(id, type, x, y, this);
+          this.units.push(unit);
+          return unit;
         },
       }
             
@@ -43,7 +48,6 @@
         this.isHost = isHost;
         this.playerCount = playerCount;
         this.clientId = clientId;
-        this.remotes = [];
         this.players = {};
       }
       Game.prototype = {
@@ -63,6 +67,10 @@
               console.error('no handler for '+message.type);
             }
           }
+        },
+        
+        getPlayer: function() {
+          return this.players[this.clientId];
         },
         
         
@@ -90,7 +98,7 @@
         },
         
         onunitcreate: function(event) {
-          var unit = new AjaxWar.Unit(event.unit.id, event.unit.type, event.unit.x, event.unit.y, event.unit.id.split('_')[0]);
+          this.players[event.client].createUnit(event.unit.id, event.unit.type, event.unit.x, event.unit.y);
         },
         
         onunitmove: function(event) {

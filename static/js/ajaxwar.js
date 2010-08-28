@@ -51,11 +51,12 @@ AjaxWar.svg.makeCircle = function(x,y,r, color) {
 }
 
 //////// Unit Class
-AjaxWar.Unit = function(id, unittype, x, y, color) {
+AjaxWar.Unit = function(id, unittype, x, y, player) {
     this.id = id;
     this.type = unittype;
     this.x = x;
     this.y = y;
+    this.player = player;
     
     var div = $("<div>").html("");
     div.addClass(unittype);
@@ -63,12 +64,12 @@ AjaxWar.Unit = function(id, unittype, x, y, color) {
     div.css( 'top', y + 'px' );
     
     // Temporary way to show color??
-    div.css('border', '4px solid #'+((color)?color:AjaxWar.playerColor));
+    div.css('border', '4px solid #'+this.player.color);
     
     div.attr('id', id);
     AjaxWar.addRef(id, this); 
     
-    if( unittype === 'tank' ) {
+    if (unittype === 'tank' && this.player.id == AjaxWar.game.clientId) {
         div.draggable({
             start: function(evt, ui) {
                 AjaxWar.ui.dragTank(id, evt, ui);
@@ -231,7 +232,7 @@ AjaxWar.ui.dragTank = function(id, evt, ui) {
     AjaxWar.ui._ghostBuster();
     
     var myTank = AjaxWar.getUnitById(id);
-    var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'ghosttank', myTank.x, myTank.y);
+    var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'ghosttank', myTank.x, myTank.y, AjaxWar.game.getPlayer());
     
     ghost.div.css( 'opacity', '.5' );
     AjaxWar.ui._ghost = ghost;
@@ -271,7 +272,7 @@ AjaxWar.init = function(playfieldId, color, game) {
         var unitType = AjaxWar.ui.indicator.cursor;
         mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
     
-        var unit = new AjaxWar.Unit(id, unitType, mousePos.x, mousePos.y);
+        var unit = AjaxWar.game.getPlayer().createUnit(id, unitType, mousePos.x, mousePos.y);
         AjaxWar.game.send('unitcreate', {'unit': unit.serialize()});
     
         return false;
