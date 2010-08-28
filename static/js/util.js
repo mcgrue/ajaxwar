@@ -15,3 +15,10 @@ function rgb2hex(rgbString) {
     while(hex.length<6) { hex='0'+hex; }
     return "#" + hex;
 }
+function len(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+}

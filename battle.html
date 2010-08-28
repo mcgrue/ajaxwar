@@ -5,7 +5,7 @@
       body { margin: 0px; padding: 20px; font-family: verdana; }
       #screen { width: 100%; height: 100%; background: url(/static/loading.gif) white no-repeat center;}
       .box { width: 50px; height: 50px; position: absolute; }
-      #chat { top: 20px; position: absolute;}
+      #text { top: 20px; position: absolute; list-style-type: square;}
       .chat { font-size: small; width: 150px; position: relative; bottom: 100px; height: 100px;}
       /*.chat .wrap { position: absolute; bottom: 0px;}*/
       form { position: absolute; bottom: 5px; left: 24px; width: 95%; display: inline;}
@@ -20,21 +20,36 @@
     <script type="text/javascript" src="/static/js/util.js"></script>
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
+      var TIMEOUT = 15000;
       var game = null;
       var lobby = null;
+      var state = 'lobby';
       var color = null;
+            
+      var Player = function(id, color, remote, nick) {
+        this.remote = remote;
+        this.id = id;
+        this.nick = nick;
+        this.color = color;
+        
+      }
+      Player.prototype = {
+        getName: function() {
+          return (this.nick) ? this.nick : this.id;
+        },
+      }
             
       var Game = function(playerCount, clientId, isHost) {
         this.isHost = isHost;
         this.playerCount = playerCount;
         this.clientId = clientId;
         this.remotes = [];
-        this.nicks = {};
+        this.players = {};
       }
       Game.prototype = {
         send: function(type, data) {
           if (!data) data = {};
-          data['type'] = type;
+          data['type'] = 'game:'+type;
           data['client'] = this.clientId;
           $.ajaxSetup({contentType: 'application/json'});
           $.post('?send', JSON.stringify(data));
@@ -43,13 +58,15 @@
         receive: function(message) {
           if (message.client != this.clientId) {
             try {
-              this['on'+message.type](message);
+              this['on'+message.type.split(':')[1]](message);
             } catch(e) {
               console.error('no handler for '+message.type);
             }
           }
         },
         
+        
+        // if somebody tries to join when playing, we tell them to bugger off
         onjoin: function(event) {
           if (this.isHost) {
             this.send('playing');
@@ -57,24 +74,18 @@
         },
         
         start: function() { 
-          console.log("Starting game...");
+          displayText("Starting game...");
           $('#screen').css('background-image', 'none');
           $('form input').focus();
           AjaxWar.init('screen', color, this);
-          //$.post('?send', {type: 'enter', player: this.player}); 
+          this.send('enter', {color: color});
+          this.createPlayer(this.clientId, color, false);
         },
         
-        isRemote: function(id) { 
-          return (this.remotes.indexOf(id) != -1);
-        },
         
         onenter: function(event) {
-          if (!this.isRemote(event.player)) {
-            this.createRemote(event.player);
-            if (this.isHost) { 
-              // Enslave them
-              $.post('?send', {type: 'enslave', player: this.player});
-            }
+          if (!this.hasOwnProperty(event.client) && len(this.players) < this.playerCount) {
+            this.createPlayer(event.client, event.color, true);
           }
         },
         
@@ -88,9 +99,9 @@
         },
         
         
-        createRemote: function(id) {
-          console.log("Player '"+id+"' joined");
-          this.remotes.push(id);
+        createPlayer: function(id, color, remote) {
+          displayText("Player '"+id+"' joined");
+          this.players[id] = new Player(id, color, remote);
         },
         
         sendChat: function(chat) {
@@ -98,20 +109,18 @@
         },
         
         onchat: function(event) {
-          var nick = (this.nicks.hasOwnProperty(event.client)) ? this.nicks[event.client] : event.client;
-          console.log(nick+": "+event.chat);
-          displayChat(nick, event.chat);
+          displayChat(this.players[event.client], event.chat);
         },
         
         setNick: function(nick) {
-          this.nicks[this.clientId] = nick;
+          this.players[this.clientId].nick = nick;
           this.send('nick', {'nick': nick});
         },
         
         onnick: function(event) {
-          var nick = (this.nicks.hasOwnProperty(event.client)) ? this.nicks[event.client] : event.client;
-          displayChat(nick, ": changed name to "+event.nick);
-          this.nicks[event.client] = event.nick;
+          var player = this.players[event.client];
+          displayText(player.getName() + " changed name to "+event.nick);
+          player.nick = nick;
         },
       };
       
@@ -119,6 +128,7 @@
         color = setupColor();
         lobby = new Lobby(2, function() { 
           game = new Game(lobby.size, lobby.clientId, lobby.isHost);
+          state = 'game';
           game.start();
         });
         
@@ -134,10 +144,10 @@
             console.error(reason);
           },
           onmessage: function(msg) {
-            if (lobby.state == 'playing') {
-              game.receive(msg);
-            } else {
+            if (state == 'lobby' && msg.type.split(':')[0] == 'lobby') {
               lobby.receive(msg);
+            } else if (state == 'game' && msg.type.split(':')[0] == 'game') {
+              game.receive(msg);
             }
           },
         });
@@ -163,10 +173,16 @@
         $('#'+id).css('top', pos.y);
       }
       
-      function displayChat(id, text) {
-        var chatId = 'chat-' + Date.now().toString();
-        $('#chat').append('<div id="'+chatId+'">'+id+': '+text+'</div>');
-        setTimeout(function(){ $('#'+chatId).remove(); }, 5000);
+      function displayChat(player, text) {
+        displayText(player.getName() + ': ' + text, player.color);
+      }
+      
+      function displayText(text, color) {
+        if (!color) color = 'black';
+        var textId = 'text-' + Date.now().toString();
+        $('#text').append('<li id="'+textId+'" style="color: '+color+';"><span style="color: black;">'+text+'</span></li>');
+        console.log(text);
+        setTimeout(function(){ $('#'+textId).remove(); }, 5000);
       }
       
       function sendChat() {
@@ -176,8 +192,7 @@
           console.log("setting nick: "+nick);
           game.setNick(nick);
         } else {
-          displayChat('me', chat);
-          console.log("me: "+chat);
+          displayText('me: ' + chat);
           game.sendChat(chat);
         }
         $('input').val('');
@@ -200,8 +215,8 @@
         <div id="tower_indicator" class="tower indicator"></div>
     </div>
     <div id="screen">
-      <div id="chat"></div>
+      <ul id="text"></ul>
     </div>
-    <form onsubmit="return sendChat()"><input type="text" /></form>
+    <form onsubmit="sendChat(); return false;"><input type="text" /></form>
   </body>
 </html>

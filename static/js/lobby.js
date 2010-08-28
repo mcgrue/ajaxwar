@@ -10,29 +10,29 @@ var Lobby = function(size, startGame) {
 Lobby.prototype = {
   send: function(type, data) {
     if (!data) { data = {} }
-    data['type'] = type;
+    data['type'] = 'lobby:'+type;
     data['client'] = this.clientId;
     $.post('?send', data);
   },
   receive: function(message) {
     if (message.client != this.clientId) {
-        this['on'+message.type](message);
+        this['on'+message.type.split(':')[1]](message);
     }
   },
   join: function() {
     this.state = 'joining';
-    this.send('join')
+    this.send('join');
     if (this.isHost == null) {
       lobby = this;
       setTimeout(function() { 
-        if (lobby.isHost == null) {
+        if (lobby.isHost == null && lobby.state == 'joining') {
           lobby.send('host');
           lobby.isHost = true;
           console.log("Became host.");
           lobby.clients.push(lobby.id);
           lobby.onwait();
         }
-      }, 3000);
+      }, TIMEOUT);
     }
   },
   onhost: function(event) { 
