@@ -1,45 +1,8 @@
 
 
-
-
-AjaxWar.util = {};
 AjaxWar.ui = {};
 
-AjaxWar.util.relPosition = function (element, mouseX, mouseY) {
-    var offset = $(element).offset();
-    var x = mouseX - offset.left;
-    var y = mouseY - offset.top;
-    
-    return {'x': parseInt(x), 'y': parseInt(y)};
-}
 
-AjaxWar.util.inArray = function (haystack, needle) {
-    if( haystack.length ) {
-        for (var i=0; i < haystack.length; i++) {
-            if (haystack[i] === needle) {
-                 return true;
-            }
-        }
-    } else {
-        for( var i in haystack ) {
-            if (haystack[i] === needle) {
-                 return true;
-            }                    
-        }
-    }
-    return false;
-};
-
-AjaxWar.util.count = function( obj ) {
-    var count = 0;
-    for( var k in obj ) {
-        if( obj.hasOwnProperty(k) ) {
-           ++count;
-        }
-    }
-    
-    return count;
-}
 
 AjaxWar.ui.clickUnit = function(id) {
     log('CLICKED UNIT ' + id);
