@@ -186,9 +186,9 @@ AjaxWar.ui.clickUnit = function(id) {
 
 AjaxWar.ui.indicator = {};
 AjaxWar.ui.indicator.clearIndicator = function() {
-    $('#tank_indicator').css('border', 'solid 4px white');
-    $('#production_indicator').css('border', 'solid 4px white');
-    $('#tower_indicator').css('border', 'solid 4px white');
+    //$('#tank_indicator').css('border', 'solid 4px white');
+    //$('#production_indicator').css('border', 'solid 4px white');
+    //$('#tower_indicator').css('border', 'solid 4px white');
 }
 
 AjaxWar.ui.indicator.cursor_idx = 0;
@@ -208,7 +208,7 @@ AjaxWar.ui.updateSelector = function(key) {
     if( map ) {
         AjaxWar.ui.indicator.clearIndicator();
         
-        $('#'+map+'_indicator').css('border', 'solid 4px red');
+        //$('#'+map+'_indicator').css('border', 'solid 4px red');
         AjaxWar.ui.indicator.cursor_idx = +key;
         AjaxWar.ui.indicator.cursor = map;
     }            

@@ -3,7 +3,9 @@
     <title>AjaxWar Battle</title>
     <style type="text/css">
       body { margin: 0px; padding: 20px; font-family: verdana; }
-      #screen { width: 100%; height: 100%; background: url(/static/loading.gif) white no-repeat center;}
+      #screen { width: 100%; height: 100%; background: url(/static/loading.gif) white no-repeat center;
+        position: relative;
+        overflow:  hidden;}
       .box { width: 50px; height: 50px; position: absolute; }
       #text { top: 20px; position: absolute; list-style-type: square;}
       .chat { font-size: small; width: 150px; position: relative; bottom: 100px; height: 100px;}
@@ -84,7 +86,6 @@
         start: function() { 
           displayText("Starting game...");
           $('#screen').css('background-image', 'none');
-          $('form input').focus();
           AjaxWar.init('screen', color, this);
           this.send('enter', {color: color});
           this.createPlayer(this.clientId, color, false);
@@ -97,9 +98,7 @@
           }
           if (len(this.players) == this.playerCount && this.isHost) {
             var startingCorners = [[10,10], [60,10], [10, 60], [60,60]];
-            var location = null;
-            var unit = null;
-            var locations = {};
+            var location = null, unit = null, locations = {};
             for (var i in this.players) {
               location = startingCorners.splice(rnd(startingCorners.length), 1)[0];
               location = denormalizePosition((location[0] + rnd(30))/100, (location[1] + rnd(30))/100);
@@ -240,11 +239,6 @@
     </script>
   </head>
   <body onclick="$('input').focus()">
-    <div id="button_indicator">
-        <div id="tank_indicator" class="tank indicator"></div>
-        <div id="production_indicator" class="production indicator"></div>
-        <div id="tower_indicator" class="tower indicator"></div>
-    </div>
     <div id="screen">
       <ul id="text"></ul>
     </div>
