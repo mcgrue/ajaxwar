@@ -20,7 +20,7 @@
     <script type="text/javascript" src="/static/js/util.js"></script>
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
-      var TIMEOUT = 10000;
+      var TIMEOUT = 5000;
       var game = null;
       var lobby = null;
       var state = 'lobby';
@@ -94,6 +94,29 @@
         onenter: function(event) {
           if (!this.hasOwnProperty(event.client) && len(this.players) < this.playerCount) {
             this.createPlayer(event.client, event.color, true);
+          }
+          if (len(this.players) == this.playerCount && this.isHost) {
+            var startingCorners = [[10,10], [60,10], [10, 60], [60,60]];
+            var location = null;
+            var unit = null;
+            var locations = {};
+            for (var i in this.players) {
+              location = startingCorners.splice(rnd(startingCorners.length), 1)[0];
+              location = denormalizePosition((location[0] + rnd(30))/100, (location[1] + rnd(30))/100);
+              unit = this.players[i].createUnit(AjaxWar.getNextRef(), 'production', location.x, location.y);
+              locations[i] = unit.serialize();
+            }
+            this.send('start', {'locations': locations});
+          }
+        },
+        
+        onstart: function(event) {
+          for (var i in event.locations) {
+            this.players[i].createUnit(
+              event.locations[i].id, 
+              event.locations[i].type, 
+              event.locations[i].x, 
+              event.locations[i].y);
           }
         },
         
