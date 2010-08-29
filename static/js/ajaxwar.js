@@ -66,6 +66,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
     
     var div = $("<div>").html("");
     div.addClass(unittype);
+    div.addClass('player-'+player.id);
     div.css( 'left', x + 'px' );
     div.css( 'top', y + 'px' );
     
@@ -91,6 +92,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
     if (this.player.id == AjaxWar.game.clientId) { 
         if( unittype === 'tank' || unittype === 'tower' ) {
             this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,'red','red');
+            this.rangeCircle.hide();
         } else if (unittype === 'production') {
             this.range = 120;
             this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,this.player.color);
@@ -288,6 +290,23 @@ AjaxWar.init = function(playfieldId, color, game) {
     $(document).keypress(function (eh){
         var key = parseInt(String.fromCharCode(eh.charCode));
         AjaxWar.ui.updateSelector(key);
+        
+    });
+    $(document).keydown(function (eh) {
+        // Press R
+        if (eh.keyCode == 82) {
+          $(".player-"+game.clientId+".tank,.player-"+game.clientId+".tower").each(function(i,el) {
+              AjaxWar.getUnitById(el.id).rangeCircle.show();
+          })
+        } 
+    });
+    $(document).keyup(function (eh) {
+        // Press R
+        if (eh.keyCode == 82) {
+          $(".player-"+game.clientId+".tank,.player-"+game.clientId+".tower").each(function(i,el) {
+              AjaxWar.getUnitById(el.id).rangeCircle.hide();
+          })
+        } 
     });
 
     
