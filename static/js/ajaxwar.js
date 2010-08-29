@@ -40,18 +40,25 @@ AjaxWar.svg.init = function() {
     AjaxWar.svg._canvas = Raphael(node, width, height);
 }
 
-AjaxWar.svg.makeCircle = function(x,y,r, color) {
+AjaxWar.svg.makeCircle = function(x,y,r,fill,stroke) {
     var circle = AjaxWar.svg._canvas.circle(x,y,r);
-    circle.attr("stroke", color);
+    if (stroke) {
+        circle.attr('stroke', stroke);
+    } else {
+        circle.attr("stroke-width", 0);
+    }
+    circle.attr("fill", fill);
+    circle.attr("fill-opacity", 0.10);
     return circle;
 }
 
 //////// Unit Class
-AjaxWar.Unit = function(id, unittype, x, y, color) {
+AjaxWar.Unit = function(id, unittype, x, y, player) {
     this.id = id;
     this.type = unittype;
     this.x = x;
     this.y = y;
+    this.player = player;
     
     var div = $("<div>").html("");
     div.addClass(unittype);
@@ -59,12 +66,12 @@ AjaxWar.Unit = function(id, unittype, x, y, color) {
     div.css( 'top', y + 'px' );
     
     // Temporary way to show color??
-    div.css('border', '4px solid #'+((color)?color:AjaxWar.playerColor));
+    div.css('border', '4px solid #'+this.player.color);
     
     div.attr('id', id);
     AjaxWar.addRef(id, this); 
     
-    if( unittype === 'tank' ) {
+    if (unittype === 'tank' && this.player.id == AjaxWar.game.clientId) {
         div.draggable({
             start: function(evt, ui) {
                 AjaxWar.ui.dragTank(id, evt, ui);
@@ -77,8 +84,13 @@ AjaxWar.Unit = function(id, unittype, x, y, color) {
         div.css('position', 'absolute'); // no, jquery, I don't want draggable things to always be relative.
     }
     
-    if( unittype === 'tank' || unittype === 'tower' ) {
-        this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range, this.radiusColor );
+    if (this.player.id == AjaxWar.game.clientId) { 
+        if( unittype === 'tank' || unittype === 'tower' ) {
+            this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,'red','red');
+        } else if (unittype === 'production') {
+            this.range = 120;
+            this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,this.player.color);
+        }
     }
     
     $("#"+AjaxWar.playfieldId).prepend(div);
@@ -95,7 +107,7 @@ AjaxWar.Unit = function(id, unittype, x, y, color) {
 
 AjaxWar.Unit.prototype = {
     radiusColor : '#F00', 
-    range : 50, //range, in pixels
+    range : 80, //range, in pixels
     speed : 50, //pixels per second
     
     calculateTimeToDestination : function(x, y) {
@@ -116,8 +128,9 @@ AjaxWar.Unit.prototype = {
               step :  function(evt,obj) { 
                   tank.x = tank.div.position().left;
                   tank.y = tank.div.position().top;
-                  
-                  tank.rangeCircle.animate({cx:tank.x, cy:tank.y}, 0)
+                  if (tank.rangeCircle) {
+                      tank.rangeCircle.animate({cx:tank.x, cy:tank.y}, 0)
+                  }
               }
           } 
       );
@@ -174,9 +187,9 @@ AjaxWar.ui.clickUnit = function(id) {
 
 AjaxWar.ui.indicator = {};
 AjaxWar.ui.indicator.clearIndicator = function() {
-    $('#tank_indicator').css('border', 'solid 4px white');
-    $('#production_indicator').css('border', 'solid 4px white');
-    $('#tower_indicator').css('border', 'solid 4px white');
+    //$('#tank_indicator').css('border', 'solid 4px white');
+    //$('#production_indicator').css('border', 'solid 4px white');
+    //$('#tower_indicator').css('border', 'solid 4px white');
 }
 
 AjaxWar.ui.indicator.cursor_idx = 0;
@@ -196,7 +209,7 @@ AjaxWar.ui.updateSelector = function(key) {
     if( map ) {
         AjaxWar.ui.indicator.clearIndicator();
         
-        $('#'+map+'_indicator').css('border', 'solid 4px red');
+        //$('#'+map+'_indicator').css('border', 'solid 4px red');
         AjaxWar.ui.indicator.cursor_idx = +key;
         AjaxWar.ui.indicator.cursor = map;
     }            
@@ -220,7 +233,7 @@ AjaxWar.ui.dragTank = function(id, evt, ui) {
     AjaxWar.ui._ghostBuster();
     
     var myTank = AjaxWar.getUnitById(id);
-    var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'ghosttank', myTank.x, myTank.y);
+    var ghost = new AjaxWar.Unit(id+'-movement_ghost', 'ghosttank', myTank.x, myTank.y, AjaxWar.game.getPlayer());
     
     ghost.div.css( 'opacity', '.5' );
     AjaxWar.ui._ghost = ghost;
@@ -260,7 +273,7 @@ AjaxWar.init = function(playfieldId, color, game) {
         var unitType = AjaxWar.ui.indicator.cursor;
         mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
     
-        var unit = new AjaxWar.Unit(id, unitType, mousePos.x, mousePos.y);
+        var unit = AjaxWar.game.getPlayer().createUnit(id, unitType, mousePos.x, mousePos.y);
         AjaxWar.game.send('unitcreate', {'unit': unit.serialize()});
     
         return false;

@@ -11,6 +11,8 @@
 .tank, .ghosttank {
     width: 60px;
     height: 30px;
+    margin-top: -15px;
+    margin-left: -30px;
     background-image: url(tank.png);
     
     position: absolute;
@@ -19,6 +21,8 @@
 .production {
     width: 60px;
     height: 60px;
+    margin-top: -30px;
+    margin-left: -30px;
     background-image: url(production.png);
     
     position: absolute;
@@ -27,6 +31,8 @@
 .tower {
     width: 60px;
     height: 60px;
+    margin-top: -30px;
+    margin-left: -30px;
     background-image: url(turret.png);
     
     position: absolute;
