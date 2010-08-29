@@ -12,6 +12,7 @@
       /*.chat .wrap { position: absolute; bottom: 0px;}*/
       form { position: absolute; top: 25px; left: 24px; width: 95%; display: inline;}
       input { width: 95%; border: 0px; font-size: 14px; background:none;}
+      #tips { color: gray; font-size: x-small; position: absolute; bottom: 20px; }
     </style>
     <link rel="stylesheet" href="static/style.css" type="text/css" />
     <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
@@ -164,7 +165,7 @@
           game.start();
         }, function(players) { displayText("Waiting for "+players+" players..."); });
         
-        Realtime.init("{{account_sid}}", {accessToken: "{{access_token}}"});
+        Realtime.init("{{account_sid}}", {accessToken: "{{access_token}}", legacyProxy: "/static/realtime-proxy.html"});
         Realtime.listen("/{{battle}}", {
           onconnect: function() {
             lobby.join();
@@ -183,7 +184,6 @@
             }
           },
         });
-
         
       })
       
@@ -245,12 +245,20 @@
       preloadTurret.src="/static/turret.png";
       preloadProduction = new Image(1,1); 
       preloadProduction.src="/static/production.png";
+      
     </script>
   </head>
   <body>
     <div id="screen">
       <ul id="text"></ul>
     </div>
-    <form onsubmit="sendChat(); return false;"><input type="text" /></form>
+    <div id="tips">
+      1: Build tank<br />
+      2: Build turret<br />
+      3: Build production<br />
+      R: Show attack radiuses<br />
+      Tab: Chat<br />
+    </div>
+    <form onsubmit="if (state == 'game') sendChat(); return false;"><input type="text" /></form>
   </body>
 </html>

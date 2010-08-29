@@ -62,14 +62,46 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
     
     var div = $("<div>").html("");
     div.addClass(unittype);
+    div.addClass('player-'+player.id);
     div.css( 'left', x + 'px' );
     div.css( 'top', y + 'px' );
-    
-    // Temporary way to show color??
-    div.css('border', '4px solid #'+this.player.color);
+
     
     div.attr('id', id);
     AjaxWar.addRef(id, this); 
+    
+    if (unittype == 'production') {
+        var canvas = Raphael(div[0], 60, 60);
+        this.svg = canvas.set();
+        this.svg.push(
+            canvas.rect(5,30,45,25),
+            canvas.rect(5,5,7,25),
+            canvas.rect(20,5,7,25)
+        ); 
+    } else if (unittype == 'tower') {
+         var canvas = Raphael(div[0], 60, 60);
+         this.svg = canvas.set();
+         this.svg.push(
+             canvas.rect(19,20,22,16),
+             canvas.path("M 30 20 L 55 55 L 5 55 z"),
+             canvas.rect(30,25,30,3)
+         );
+    } else if (unittype == 'tank' || unittype == 'ghosttank') {
+        var canvas = Raphael(div[0], 60, 30);
+        this.svg = canvas.set();
+        this.svg.push(
+            canvas.rect(10,15,38,12),
+            canvas.circle(10,21,6),
+            canvas.circle(48,21,6),
+            canvas.rect(24,5,18,10),
+            canvas.rect(30,8,30,3)
+        );
+    }
+    this.svg.attr({
+        fill: this.player.color,
+        'stroke-width': 0,
+        opacity: (unittype == 'ghosttank') ? 0.5 : 1
+    });
     
     if (unittype === 'tank' && this.player.id == AjaxWar.game.clientId) {
         div.draggable({
@@ -87,6 +119,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
     if (this.player.id == AjaxWar.game.clientId) { 
         if( unittype === 'tank' || unittype === 'tower' ) {
             this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,'red','red');
+            this.rangeCircle.hide();
         } else if (unittype === 'production') {
             this.range = 120;
             this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,this.player.color);
@@ -211,8 +244,8 @@ AjaxWar.ui.indicator.cursor_idx = 0;
 AjaxWar.ui.indicator.cursor = 'not_a_unit';
 AjaxWar.ui.indicator.keyMappings = {
     1 : 'tank',
-    2 : 'production',
-    3 : 'tower'
+    2 : 'tower',
+    3 : 'production'
 };
 AjaxWar.ui.indicator.isValid = function() {
     return AjaxWar.util.inArray(AjaxWar.ui.indicator.keyMappings, AjaxWar.ui.indicator.cursor);
@@ -277,6 +310,23 @@ AjaxWar.init = function(playfieldId, color, game) {
     $(document).keypress(function (eh){
         var key = parseInt(String.fromCharCode(eh.charCode));
         AjaxWar.ui.updateSelector(key);
+        
+    });
+    $(document).keydown(function (eh) {
+        // Press R
+        if (eh.keyCode == 82) {
+          $(".player-"+game.clientId+".tank,.player-"+game.clientId+".tower").each(function(i,el) {
+              AjaxWar.getUnitById(el.id).rangeCircle.show();
+          })
+        } 
+    });
+    $(document).keyup(function (eh) {
+        // Press R
+        if (eh.keyCode == 82) {
+          $(".player-"+game.clientId+".tank,.player-"+game.clientId+".tower").each(function(i,el) {
+              AjaxWar.getUnitById(el.id).rangeCircle.hide();
+          })
+        } 
     });
 
     
