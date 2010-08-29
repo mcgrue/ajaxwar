@@ -30,7 +30,11 @@ Lobby.prototype = {
           lobby.isHost = true;
           console.log("Became host.");
           lobby.clients.push(lobby.id);
-          lobby.onwait();
+          if (lobby.size == 1) {
+              lobby.play();
+          } else {
+              lobby.onwait();
+          }
         }
       }, TIMEOUT);
     }

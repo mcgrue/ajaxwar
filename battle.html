@@ -23,6 +23,7 @@
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
       var TIMEOUT = 5000;
+      var PLAYERS = {{players}};
       var game = null;
       var lobby = null;
       var state = 'lobby';
@@ -85,6 +86,7 @@
           AjaxWar.init('screen', color, this);
           this.send('enter', {color: color});
           this.createPlayer(this.clientId, color, false);
+          if (this.playerCount == 1 && this.isHost) this.setupLocations();
         },
         
         
@@ -93,16 +95,20 @@
             this.createPlayer(event.client, event.color, true);
           }
           if (len(this.players) == this.playerCount && this.isHost) {
-            var startingCorners = [[10,10], [60,10], [10, 60], [60,60]];
-            var location = null, unit = null, locations = {};
-            for (var i in this.players) {
-              location = startingCorners.splice(rnd(startingCorners.length), 1)[0];
-              location = denormalizePosition((location[0] + rnd(30))/100, (location[1] + rnd(30))/100);
-              unit = this.players[i].createUnit(AjaxWar.getNextRef(), 'production', location.x, location.y);
-              locations[i] = unit.serialize();
-            }
-            this.send('start', {'locations': locations});
+            this.setupLocations();
           }
+        },
+        
+        setupLocations: function() {
+          var startingCorners = [[10,10], [60,10], [10, 60], [60,60]];
+          var location = null, unit = null, locations = {};
+          for (var i in this.players) {
+            location = startingCorners.splice(rnd(startingCorners.length), 1)[0];
+            location = denormalizePosition((location[0] + rnd(30))/100, (location[1] + rnd(30))/100);
+            unit = this.players[i].createUnit(AjaxWar.getNextRef(), 'production', location.x, location.y);
+            locations[i] = unit.serialize();
+          }
+          this.send('start', {'locations': locations});
         },
         
         onstart: function(event) {
@@ -152,7 +158,7 @@
       
       $(document).ready(function() {
         color = setupColor();
-        lobby = new Lobby(2, function() { 
+        lobby = new Lobby(PLAYERS, function() { 
           game = new Game(lobby.size, lobby.clientId, lobby.isHost);
           state = 'game';
           game.start();
