@@ -94,6 +94,21 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
         } else if (unittype === 'production') {
             this.range = 120;
             this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,this.player.color);
+            this.rangeCircle.click(function(e){
+                if( !AjaxWar.ui.indicator.isValid() ) {
+                    return;
+                }
+
+                var id = AjaxWar.getNextRef();
+                var unitType = AjaxWar.ui.indicator.cursor;
+                mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
+
+                var unit = AjaxWar.game.getPlayer().createUnit(id, unitType, mousePos.x, mousePos.y);
+                AjaxWar.game.send('unitcreate', {'unit': unit.serialize()});
+
+                return false;
+            });
+            
         }
     }
     
@@ -274,21 +289,7 @@ AjaxWar.init = function(playfieldId, color, game) {
         var key = parseInt(String.fromCharCode(eh.charCode));
         AjaxWar.ui.updateSelector(key);
     });
-    
-    $('#'+AjaxWar.playfieldId).click(function(e){
-        if( !AjaxWar.ui.indicator.isValid() ) {
-            return;
-        }
-    
-        var id = AjaxWar.getNextRef();
-        var unitType = AjaxWar.ui.indicator.cursor;
-        mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
-    
-        var unit = AjaxWar.game.getPlayer().createUnit(id, unitType, mousePos.x, mousePos.y);
-        AjaxWar.game.send('unitcreate', {'unit': unit.serialize()});
-    
-        return false;
-    });
+
     
     $(document).bind('contextmenu', function(e) {
     

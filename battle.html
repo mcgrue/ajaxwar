@@ -10,8 +10,8 @@
       #text { top: 20px; position: absolute; list-style-type: square;}
       .chat { font-size: small; width: 150px; position: relative; bottom: 100px; height: 100px;}
       /*.chat .wrap { position: absolute; bottom: 0px;}*/
-      form { position: absolute; bottom: 5px; left: 24px; width: 95%; display: inline;}
-      input { width: 95%; border: 0px; font-size: 14px;}
+      form { position: absolute; top: 25px; left: 24px; width: 95%; display: inline;}
+      input { width: 95%; border: 0px; font-size: 14px; background:none;}
     </style>
     <link rel="stylesheet" href="static/style.css" type="text/css" />
     <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
@@ -162,7 +162,7 @@
           game = new Game(lobby.size, lobby.clientId, lobby.isHost);
           state = 'game';
           game.start();
-        });
+        }, function(players) { displayText("Waiting for "+players+" players..."); });
         
         Realtime.init("{{account_sid}}", {accessToken: "{{access_token}}"});
         Realtime.listen("/{{battle}}", {
@@ -228,6 +228,7 @@
           game.sendChat(chat);
         }
         $('input').val('');
+        $('input').blur();
         return false;
       }
       
@@ -238,9 +239,15 @@
         return {x: x * $('body')[0].offsetWidth, y: y * $('body')[0].offsetHeight}
       }
 
+      preloadTank = new Image(1,1); 
+      preloadTank.src="/static/tank.png";
+      preloadTurret = new Image(1,1); 
+      preloadTurret.src="/static/turret.png";
+      preloadProduction = new Image(1,1); 
+      preloadProduction.src="/static/production.png";
     </script>
   </head>
-  <body onclick="$('input').focus()">
+  <body>
     <div id="screen">
       <ul id="text"></ul>
     </div>
