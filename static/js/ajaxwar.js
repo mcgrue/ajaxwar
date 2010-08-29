@@ -1,31 +1,3 @@
-AjaxWar = {};
-
-AjaxWar._objRefIds = [];
-AjaxWar._objRefs = {};
-
-AjaxWar.getNextRef = function () {
-    return AjaxWar.playerColor + '_' + AjaxWar._objRefIds.length;
-}
-
-AjaxWar.addRef = function (id, ref) {
-    AjaxWar._objRefIds.push(id);
-    AjaxWar._objRefs[id] = ref;
-}
-
-AjaxWar.killRef = function(id) {
-    for(var i=0; i<AjaxWar._objRefIds.length; i++) {
-        if( AjaxWar._objRefIds[i] === id ) {
-            AjaxWar._objRefIds.splice(i,1);
-            break;
-        }
-    }
-    
-    delete AjaxWar._objRefs[id];
-}
-
-AjaxWar.getUnitById = function(id) {
-    return AjaxWar._objRefs[id];
-}
 
 //////// SVG STUFF
 AjaxWar.svg = {};
