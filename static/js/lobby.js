@@ -1,4 +1,4 @@
-var Lobby = function(size, startGame) {
+var Lobby = function(size, startGame, waitingCallback) {
   this.size = size;
   this.state = 'joining'; // joining, waiting, playing
   this.isHost = null;
@@ -6,6 +6,7 @@ var Lobby = function(size, startGame) {
   this.clients = [];
   //this.host = null;
   this.startGame = startGame;
+  this.waitingCallback = waitingCallback;
 }
 Lobby.prototype = {
   send: function(type, data) {
@@ -30,7 +31,13 @@ Lobby.prototype = {
           lobby.isHost = true;
           console.log("Became host.");
           lobby.clients.push(lobby.id);
-          lobby.onwait();
+          if (lobby.size == 1) {
+              lobby.play();
+          } else {
+              lobby.onwait();
+              if (lobby.waitingCallback) 
+                lobby.waitingCallback(lobby.size-1);
+          }
         }
       }, TIMEOUT);
     }
@@ -64,7 +71,7 @@ Lobby.prototype = {
   },
   onwait: function(event) {
     if (this.isHost == null) { this.isHost = false; }
-    console.log("Waiting for clients...")
+    //console.log("Waiting for clients...")
     this.state = 'waiting';
   },
   play: function() {

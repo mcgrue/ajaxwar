@@ -10,8 +10,8 @@
       #text { top: 20px; position: absolute; list-style-type: square;}
       .chat { font-size: small; width: 150px; position: relative; bottom: 100px; height: 100px;}
       /*.chat .wrap { position: absolute; bottom: 0px;}*/
-      form { position: absolute; bottom: 5px; left: 24px; width: 95%; display: inline;}
-      input { width: 95%; border: 0px; font-size: 14px;}
+      form { position: absolute; top: 25px; left: 24px; width: 95%; display: inline;}
+      input { width: 95%; border: 0px; font-size: 14px; background:none;}
     </style>
     <link rel="stylesheet" href="static/style.css" type="text/css" />
     <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
@@ -23,6 +23,7 @@
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
       var TIMEOUT = 5000;
+      var PLAYERS = {{players}};
       var game = null;
       var lobby = null;
       var state = 'lobby';
@@ -85,6 +86,7 @@
           AjaxWar.init('screen', color, this);
           this.send('enter', {color: color});
           this.createPlayer(this.clientId, color, false);
+          if (this.playerCount == 1 && this.isHost) this.setupLocations();
         },
         
         
@@ -93,16 +95,20 @@
             this.createPlayer(event.client, event.color, true);
           }
           if (len(this.players) == this.playerCount && this.isHost) {
-            var startingCorners = [[10,10], [60,10], [10, 60], [60,60]];
-            var location = null, unit = null, locations = {};
-            for (var i in this.players) {
-              location = startingCorners.splice(rnd(startingCorners.length), 1)[0];
-              location = denormalizePosition((location[0] + rnd(30))/100, (location[1] + rnd(30))/100);
-              unit = this.players[i].createUnit(AjaxWar.getNextRef(), 'production', location.x, location.y);
-              locations[i] = unit.serialize();
-            }
-            this.send('start', {'locations': locations});
+            this.setupLocations();
           }
+        },
+        
+        setupLocations: function() {
+          var startingCorners = [[10,10], [60,10], [10, 60], [60,60]];
+          var location = null, unit = null, locations = {};
+          for (var i in this.players) {
+            location = startingCorners.splice(rnd(startingCorners.length), 1)[0];
+            location = denormalizePosition((location[0] + rnd(30))/100, (location[1] + rnd(30))/100);
+            unit = this.players[i].createUnit(AjaxWar.getNextRef(), 'production', location.x, location.y);
+            locations[i] = unit.serialize();
+          }
+          this.send('start', {'locations': locations});
         },
         
         onstart: function(event) {
@@ -152,11 +158,11 @@
       
       $(document).ready(function() {
         color = setupColor();
-        lobby = new Lobby(2, function() { 
+        lobby = new Lobby(PLAYERS, function() { 
           game = new Game(lobby.size, lobby.clientId, lobby.isHost);
           state = 'game';
           game.start();
-        });
+        }, function(players) { displayText("Waiting for "+players+" players..."); });
         
         Realtime.init("{{account_sid}}", {accessToken: "{{access_token}}"});
         Realtime.listen("/{{battle}}", {
@@ -222,6 +228,7 @@
           game.sendChat(chat);
         }
         $('input').val('');
+        $('input').blur();
         return false;
       }
       
@@ -232,9 +239,15 @@
         return {x: x * $('body')[0].offsetWidth, y: y * $('body')[0].offsetHeight}
       }
 
+      preloadTank = new Image(1,1); 
+      preloadTank.src="/static/tank.png";
+      preloadTurret = new Image(1,1); 
+      preloadTurret.src="/static/turret.png";
+      preloadProduction = new Image(1,1); 
+      preloadProduction.src="/static/production.png";
     </script>
   </head>
-  <body onclick="$('input').focus()">
+  <body>
     <div id="screen">
       <ul id="text"></ul>
     </div>

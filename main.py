@@ -34,7 +34,8 @@ class BattleHandler(webapp.RequestHandler):
         self.response.out.write(template.render('battle.html', {
             'account_sid': CREDS[REALM][0], 
             'battle': battle,
-            'access_token': memcache.get(battle)}))
+            'access_token': memcache.get(battle),
+            'players': self.request.get('players', 2)}))
     
     def post(self, battle):
         if self.request.query_string == 'send':
