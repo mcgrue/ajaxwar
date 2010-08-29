@@ -63,11 +63,7 @@
         
         receive: function(message) {
           if (message.client != this.clientId) {
-            try {
-              this['on'+message.type.split(':')[1]](message);
-            } catch(e) {
-              console.error('no handler for '+message.type);
-            }
+            this['on'+message.type.split(':')[1]](message);
           }
         },
         

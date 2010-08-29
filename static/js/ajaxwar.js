@@ -44,9 +44,15 @@ AjaxWar.svg.init = function() {
     AjaxWar.svg._canvas = Raphael(node, width, height);
 }
 
-AjaxWar.svg.makeCircle = function(x,y,r, color) {
+AjaxWar.svg.makeCircle = function(x,y,r,fill,stroke) {
     var circle = AjaxWar.svg._canvas.circle(x,y,r);
-    circle.attr("stroke", color);
+    if (stroke) {
+        circle.attr('stroke', stroke);
+    } else {
+        circle.attr("stroke-width", 0);
+    }
+    circle.attr("fill", fill);
+    circle.attr("fill-opacity", 0.10);
     return circle;
 }
 
@@ -82,8 +88,13 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
         div.css('position', 'absolute'); // no, jquery, I don't want draggable things to always be relative.
     }
     
-    if( unittype === 'tank' || unittype === 'tower' ) {
-        this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range, this.radiusColor );
+    if (this.player.id == AjaxWar.game.clientId) { 
+        if( unittype === 'tank' || unittype === 'tower' ) {
+            this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,'red','red');
+        } else if (unittype === 'production') {
+            this.range = 120;
+            this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,this.player.color);
+        }
     }
     
     $("#"+AjaxWar.playfieldId).prepend(div);
@@ -100,7 +111,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
 
 AjaxWar.Unit.prototype = {
     radiusColor : '#F00', 
-    range : 50, //range, in pixels
+    range : 80, //range, in pixels
     speed : 50, //pixels per second
     
     calculateTimeToDestination : function(x, y) {
@@ -123,8 +134,9 @@ AjaxWar.Unit.prototype = {
                   tank.y = tank.div.position().top;
 
                   //AjaxWar.util.log(myTank.x+','+myTank.y);
-
-                  tank.rangeCircle.animate({cx:tank.x, cy:tank.y}, 0)
+                  if (tank.rangeCircle) {
+                      tank.rangeCircle.animate({cx:tank.x, cy:tank.y}, 0)
+                  }
               }
           } 
       );
