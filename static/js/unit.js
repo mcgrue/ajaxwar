@@ -48,7 +48,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
         opacity: (unittype == 'ghosttank') ? 0.5 : 1
     });
     
-    if (unittype === 'tank' && this.player.id == AjaxWar.game.clientId) {
+    if (unittype === 'tank' && this.isLocal()) {
         div.draggable({
             start: function(evt, ui) {
                 AjaxWar.ui.dragTank(id, evt, ui);
@@ -100,7 +100,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
         );
     }
     
-    if (this.player.id == AjaxWar.game.clientId) { 
+    if (this.isLocal()) { 
         if( unittype === 'tank' || unittype === 'tower' ) {
             this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,'red','red');
             this.rangeCircle.hide();
@@ -145,6 +145,8 @@ AjaxWar.Unit.prototype = {
     radiusColor : '#F00', 
     range : 80, //range, in pixels
     speed : 50, //pixels per second
+    target: null,
+    seeking: null,
     
     calculateTimeToDestination : function(x, y) {
         var x = Math.pow((this.x - x), 2);
@@ -152,6 +154,55 @@ AjaxWar.Unit.prototype = {
         var d = Math.sqrt(x+y);
         return (d / this.speed) * 1000;
     },
+    
+    blink: function() {
+        var options = {'duration':100};
+        $(this.div).animate({'opacity': 'toggle'},options).animate({'opacity': 'toggle'},options);
+    },
+    
+    isEnemyOf: function(unit) {
+        return (unit.player.id != this.player.id);
+    },
+    
+    isLocal: function() {
+        return (this.player.id == AjaxWar.game.clientId);
+    },
+    
+    findTarget: function() {
+        log("finding target");
+        var o;
+        for (var id in AjaxWar._objRefs) {
+            o = AjaxWar._objRefs[id];
+            if (o.hasOwnProperty('player') && o.isEnemyOf(this) && o.inRangeOf(this)) {
+                this.attack(o);
+                break;
+            }
+        }
+    },
+    
+    attack: function(unit) {
+        clearInterval(this.seeking);
+        log("attack!");
+        unit.blink();
+        if (rnd(100) < 20)
+            unit.die();
+        var tank = this;
+        //setTimeout(function() { tank.findTarget() }, 2000);
+    },
+    
+    die: function() {
+        log("die");
+        this.div.remove();
+        AjaxWar.killRef(this.id);
+    },
+    
+    inRangeOf: function(unit) {
+        var x = Math.pow((this.x - unit.x), 2);
+        var y = Math.pow((this.y - unit.y), 2);
+        var d = Math.sqrt(x+y);
+        return (d < unit.range);
+    },
+    
     
     move : function(x, y) {
       var animTime = this.calculateTimeToDestination(x, y);
@@ -167,9 +218,16 @@ AjaxWar.Unit.prototype = {
                   if (tank.rangeCircle) {
                       tank.rangeCircle.animate({cx:tank.x, cy:tank.y}, 0)
                   }
-              }
-          } 
-      );
+              },
+
+            complete: function() {
+                clearInterval(tank.seeking);	
+                tank.findTarget();
+            }
+        });
+      
+        this.findTarget();
+        this.seeking = setInterval(this.findTarget, 2000);
     },
     
     serialize: function() {

@@ -13,7 +13,7 @@ AjaxWar.addRef = function (id, ref) {
 }
 
 AjaxWar.killRef = function(id) {
-    for(var i=0; i<AjaxWar._objRefIds.length; i++) {
+    for(var i in AjaxWar._objRefIds) {
         if( AjaxWar._objRefIds[i] === id ) {
             AjaxWar._objRefIds.splice(i,1);
             break;
@@ -23,11 +23,19 @@ AjaxWar.killRef = function(id) {
     delete AjaxWar._objRefs[id];
 }
 
+AjaxWar.seek = function(unit) {
+    log("seek")
+    if (unit.seeking) {
+        unit.findTarget();
+        setTimeout(function() { AjaxWar.seek(unit) }, 2000);
+    }
+}
+
 AjaxWar.getUnitById = function(id) {
     return AjaxWar._objRefs[id];
 }
 
-    AjaxWar.util = {};
+AjaxWar.util = {};
 
 AjaxWar.util.relPosition = function (element, mouseX, mouseY) {
     var offset = $(element).offset();
