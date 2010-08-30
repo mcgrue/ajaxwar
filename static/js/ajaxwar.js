@@ -34,11 +34,11 @@ AjaxWar.init = function(playfieldId, color, game) {
 
     
     $(document).bind('contextmenu', function(e) {
-    
+        
         AjaxWar.ui.indicator.cursor_idx
-    
+        
         AjaxWar.ui.indicator.cursor_idx++;
-    
+        
         if( AjaxWar.ui.indicator.cursor_idx > AjaxWar.util.count(AjaxWar.ui.indicator.keyMappings) ) {
             AjaxWar.ui.indicator.cursor_idx = 1;
         }

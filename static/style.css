@@ -68,3 +68,7 @@
     background-image: url('/static/icon-tank.png');
     z-index: 5000;
 }
+
+#buildtimer {
+    background-color: #FF00FF;
+}
