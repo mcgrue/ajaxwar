@@ -70,5 +70,14 @@
 }
 
 #buildtimer {
-    background-color: #FF00FF;
+    background-color: #FF0000;
+}
+
+#buildtimer_bar {
+    text-align: left;
+    background-color: #00FF00;
+    padding: 0px;
+    margin: 0px;
+    width: 0%;
+    height: 10px;
 }
