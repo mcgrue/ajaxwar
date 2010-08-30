@@ -1,4 +1,5 @@
 
+
 AjaxWar.init = function(playfieldId, color, game) {
     AjaxWar.playfieldId = playfieldId;
     AjaxWar.playerColor = color;
