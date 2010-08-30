@@ -60,3 +60,27 @@
     height: 60px;
     width: 500px;
 }
+
+#mouse_selector {
+    position: absolute;
+    width:    16px;
+    height:  16px;
+    background-image: url('/static/icon-tank.png');
+    z-index: 5000;
+}
+
+#buildtimer, #dying_bar {
+    position: absolute;
+    width: 60px;
+    height: 10px;
+    background-color: #FF0000;
+}
+
+#buildtimer_bar {
+    text-align: left;
+    background-color: #00FF00;
+    padding: 0px;
+    margin: 0px;
+    width: 0%;
+    height: 10px;
+}

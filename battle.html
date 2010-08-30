@@ -21,6 +21,11 @@
     <script type="text/javascript" src="/static/js/jquery-ui-1.8.4.custom.min.js"></script>
     <script type="text/javascript" src="/static/js/lobby.js"></script>
     <script type="text/javascript" src="/static/js/util.js"></script>
+    <script type="text/javascript" src="/static/js/top.js"></script>
+    <script type="text/javascript" src="/static/js/svg.js"></script>
+    <script type="text/javascript" src="/static/js/game.js"></script>
+    <script type="text/javascript" src="/static/js/unit.js"></script>
+    <script type="text/javascript" src="/static/js/ui.js"></script>
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
       var TIMEOUT = 5000;
@@ -131,7 +136,6 @@
           unit.move(event.x, event.y);
         },
         
-        
         createPlayer: function(id, color, remote) {
           displayText("Player '"+id+"' joined");
           this.players[id] = new Player(id, color, remote);
@@ -193,7 +197,6 @@
         $('body').css('background', '#'+color);
         return color;
       }
-      
       
       function getNormalPosition(id) {
         return normalizePosition($('#'+id)[0])
@@ -259,6 +262,7 @@
       R: Show attack radiuses<br />
       Tab: Chat<br />
     </div>
+    <div id="mouse_selector"></div>
     <form onsubmit="if (state == 'game') sendChat(); return false;"><input type="text" /></form>
   </body>
 </html>
