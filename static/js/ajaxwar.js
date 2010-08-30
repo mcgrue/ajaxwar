@@ -1,4 +1,4 @@
-
+AjaxWar = {};
 AjaxWar._objRefIds = [];
 AjaxWar._objRefs = {};
 
