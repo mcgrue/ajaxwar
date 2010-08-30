@@ -60,3 +60,11 @@
     height: 60px;
     width: 500px;
 }
+
+#mouse_selector {
+    position: absolute;
+    width:    16px;
+    height:  16px;
+    background-image: url('/static/icon-tank.png');
+    z-index: 5000;
+}

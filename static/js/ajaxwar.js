@@ -1,16 +1,19 @@
 
-
-
 AjaxWar.init = function(playfieldId, color, game) {
     AjaxWar.playfieldId = playfieldId;
     AjaxWar.playerColor = color;
     AjaxWar.game = game;
     
-    $(document).keypress(function (eh){
+    $(document).mousemove(function (eh) {
+        $('#mouse_selector').css({ 'left': eh.pageX + 'px', 'top' : (eh.pageY+16) + 'px' });
+    });
+    
+    $(document).keypress(function (eh) {
         var key = parseInt(String.fromCharCode(eh.charCode));
         AjaxWar.ui.updateSelector(key);
         
     });
+    
     $(document).keydown(function (eh) {
         // Press R
         if (eh.keyCode == 82) {
@@ -19,6 +22,7 @@ AjaxWar.init = function(playfieldId, color, game) {
           })
         } 
     });
+    
     $(document).keyup(function (eh) {
         // Press R
         if (eh.keyCode == 82) {
@@ -38,9 +42,9 @@ AjaxWar.init = function(playfieldId, color, game) {
         if( AjaxWar.ui.indicator.cursor_idx > AjaxWar.util.count(AjaxWar.ui.indicator.keyMappings) ) {
             AjaxWar.ui.indicator.cursor_idx = 1;
         }
-    
+        
         AjaxWar.ui.updateSelector(AjaxWar.ui.indicator.cursor_idx);
-    
+        
         return false;
     });
     
