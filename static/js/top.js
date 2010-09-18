@@ -28,12 +28,14 @@ AjaxWar.attackTick = function() {
         var o = AjaxWar._objRefs[id];
         if (o.target) {
             o.attack();
+            AjaxWar.game.send('attack', {'target': o.target.id});
         }
     }
     for (var id in AjaxWar._objRefs) {
         var o = AjaxWar._objRefs[id];
         if (o.killedBy) {
             o.die();
+            AjaxWar.game.send('kill', {'target': o.id});
         }
     }
 }

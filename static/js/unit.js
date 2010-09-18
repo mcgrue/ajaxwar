@@ -70,6 +70,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
 
 AjaxWar.Unit.prototype = {
     radiusColor : '#F00', 
+    rangeCircle: null,
     range : 80, //range, in pixels
     speed : 50, //pixels per second
     target: null,
@@ -190,7 +191,6 @@ AjaxWar.Unit.prototype = {
         for (var id in AjaxWar._objRefs) {
             var o = AjaxWar._objRefs[id];
             if (o.hasOwnProperty('player') && o.isEnemyOf(this) && o.inRangeOf(this)) {
-                //this.attack(o);
                 this.target = o;
                 break;
             }
@@ -201,15 +201,18 @@ AjaxWar.Unit.prototype = {
         //clearInterval(this.seeking);
         log("attack! ("+this.id+" on "+this.target.id+" violenced)");
         this.target.blink();
-        if (rnd(100) < 20)
+        if (rnd(100) < 50)
             this.target.killedBy = this;
         this.findTarget();
     },
     
     die: function() {
         log("die");
-        this.killedBy.target = null;
+        if (this.killedBy)
+            this.killedBy.target = null;
         this.div.remove();
+        if (this.rangeCircle)
+            this.rangeCircle.remove();
         AjaxWar.killRef(this.id);
     },
     

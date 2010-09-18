@@ -129,6 +129,16 @@
           }
         },
         
+        onattack: function(event) {
+          var unit = AjaxWar.getUnitById(event.target);
+          unit.blink();
+        },
+        
+        onkill: function(event) {
+          var unit = AjaxWar.getUnitById(event.target);
+          unit.die();
+        },
+        
         onunitcreate: function(event) {
           this.players[event.client].createUnit(event.unit.id, event.unit.type, event.unit.x, event.unit.y);
         },
