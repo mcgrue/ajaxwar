@@ -107,7 +107,7 @@ AjaxWar.Unit.prototype = {
         $("#buildtimer_bar").animate(
             { width: "100%" },
             {
-                duration : AjaxWar.gamestuff.calcBuildTime(this.type),
+                duration : AjaxWar.gamestuff.calcBuildTime(this.type, this.player),
                 easing: 'linear',
                 complete: function() {
                     $("#buildtimer").attr('id', 'dying_bar');
@@ -210,6 +210,12 @@ AjaxWar.Unit.prototype = {
         log("die");
         if (this.killedBy)
             this.killedBy.target = null;
+            
+        this.player.prodcount--;
+        if( this.player.prodcount <= 0 ) {
+            log("A player died.  How sad.");    
+        }
+        
         this.div.remove();
         if (this.rangeCircle)
             this.rangeCircle.remove();
