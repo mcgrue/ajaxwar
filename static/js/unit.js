@@ -79,6 +79,10 @@ AjaxWar.Unit.prototype = {
     seeking: null,
     killedBy: null,
     
+    canAttack: function() {
+      return (this.type === 'tank' || this.type === 'tower');
+    },
+    
     calculateTimeToDestination : function(x, y) {
         var x = Math.pow((this.x - x), 2);
         var y = Math.pow((this.y - y), 2);
@@ -209,19 +213,21 @@ AjaxWar.Unit.prototype = {
         if (!this.target.inRangeOf(this)) return;
         log("attack! ("+this.id+" on "+this.target.id+" violenced)");
         this.target.blink();
-        if (rnd(100) < 50)
+        if (rnd(100) < 30)
             this.target.killedBy = this;
-        this.findTarget();
     },
     
     die: function() {
         log("die");
         if (this.killedBy)
             this.killedBy.target = null;
-            
-        this.player.prodcount--;
-        if( this.player.prodcount <= 0 ) {
-            log("A player died.  How sad.");    
+        
+        if (this.type === 'production') {    
+            this.player.prodcount--;
+            this.player.die();
+            if( this.player.prodcount <= 0 ) {
+                log("A player died.  How sad.");    
+            }
         }
         
         this.div.remove();
@@ -255,17 +261,13 @@ AjaxWar.Unit.prototype = {
               },
 
             complete: function() {
-                clearInterval(tank.seeking);	
-                tank.findTarget();
+                // nothin
             }
         });
       
-        this.findTarget();
-        this.seeking = setInterval(function() { tank.findTarget() }, 2000);
     },
     
     serialize: function() {
       return {id: this.id, type: this.type, x: this.x, y: this.y};  
     },
 };
-//////// End Unit Class

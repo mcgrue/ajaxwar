@@ -23,7 +23,14 @@ AjaxWar.killRef = function(id) {
     delete AjaxWar._objRefs[id];
 }
 
-AjaxWar.attackTick = function() {
+AjaxWar.combatTick = function() {
+    for (var id in AjaxWar._objRefs) {
+        var o = AjaxWar._objRefs[id];
+        if (o.canAttack()) {
+            o.findTarget();
+        }
+    }
+    
     for (var id in AjaxWar._objRefs) {
         var o = AjaxWar._objRefs[id];
         if (o.target) {
