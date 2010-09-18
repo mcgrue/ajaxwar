@@ -74,6 +74,7 @@ AjaxWar.Unit.prototype = {
     speed : 50, //pixels per second
     target: null,
     seeking: null,
+    killedBy: null,
     
     calculateTimeToDestination : function(x, y) {
         var x = Math.pow((this.x - x), 2);
@@ -126,7 +127,7 @@ AjaxWar.Unit.prototype = {
     
     finishBuild: function() {
         if (this.isLocal()) { 
-            if (this.player.units.length > 1) {
+            if (this.player.units.length > 1) { // don't send unitcreate on first/starting unit
                 AjaxWar.game.send('unitcreate', {'unit': this.serialize()});
             }
             
@@ -185,27 +186,29 @@ AjaxWar.Unit.prototype = {
     },
     
     findTarget: function() {
+        this.target = null;
         for (var id in AjaxWar._objRefs) {
             var o = AjaxWar._objRefs[id];
             if (o.hasOwnProperty('player') && o.isEnemyOf(this) && o.inRangeOf(this)) {
-                this.attack(o);
+                //this.attack(o);
+                this.target = o;
                 break;
             }
         }
     },
     
-    attack: function(unit) {
-        clearInterval(this.seeking);
-        log("attack! ("+this.id+" on "+unit.id+" violenced)");
-        unit.blink();
+    attack: function() {
+        //clearInterval(this.seeking);
+        log("attack! ("+this.id+" on "+this.target.id+" violenced)");
+        this.target.blink();
         if (rnd(100) < 20)
-            unit.die();
-        var tank = this;
-        //setTimeout(function() { tank.findTarget() }, 2000);
+            this.target.killedBy = this;
+        this.findTarget();
     },
     
     die: function() {
         log("die");
+        this.killedBy.target = null;
         this.div.remove();
         AjaxWar.killRef(this.id);
     },

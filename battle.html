@@ -115,6 +115,7 @@
             unit = this.players[i].createUnit(AjaxWar.getNextRef(), 'production', location.x, location.y);
             locations[i] = unit.serialize();
           }
+          setInterval(AjaxWar.attackTick, 2000);
           this.send('start', {'locations': locations});
         },
         
