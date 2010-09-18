@@ -12,6 +12,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
     div.css( 'left', x + 'px' );
     div.css( 'top', y + 'px' );
     div.attr('id', id);
+    this.div = div;
     
     AjaxWar.addRef(id, this); 
     
@@ -48,84 +49,12 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
         opacity: (unittype == 'ghosttank') ? 0.5 : 1
     });
     
-    if (unittype === 'tank' && this.isLocal()) {
-        div.draggable({
-            start: function(evt, ui) {
-                AjaxWar.ui.dragTank(id, evt, ui);
-            },
-            stop: function(evt, ui) {
-                AjaxWar.ui.dropTank(id, evt, ui);
-            }
-        });
-        
-        div.css('position', 'absolute'); // no, jquery, I don't want draggable things to always be relative.
-    }
     
     if (unittype == 'production' || unittype == 'tank' || unittype == 'tower' ) {
-        var buildtimer = $("<div>").html("");
-        
-        var targ_y = (y + div.height() + 30);
-        if(unittype == 'tank') {
-            targ_y -= 15;
-        }
-        
-        buildtimer.css( 'left', (x-30) + 'px' );
-        buildtimer.css( 'top', targ_y + 'px' );
-        buildtimer.attr('id', 'buildtimer');
-        
-        $("#"+AjaxWar.playfieldId).prepend(buildtimer);
-        
-        var buildtimer_bar = $("<div>").html("");
-        buildtimer_bar.attr('id', 'buildtimer_bar');
-        
-        $("#buildtimer").prepend(buildtimer_bar);
-        
-        $("#buildtimer_bar").animate(
-            { width: "100%",},
-            {
-                duration : AjaxWar.gamestuff.calcBuildTime(unittype),
-                complete: function() {
-                    $("#buildtimer").attr('id', 'dying_bar');
-                    $("#dying_bar").animate(
-                        { opacity: 0,},
-                        {
-                            duration : 500,
-                            complete: function() {
-                                $(this).remove();
-                            }
-                        }
-                    );
-                }
-            }
-        );
-    }
-    
-    if (this.isLocal()) { 
-        if( unittype === 'tank' || unittype === 'tower' ) {
-            this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,'red','red');
-            this.rangeCircle.hide();
-        } else if (unittype === 'production') {
-            this.range = 120;
-            this.rangeCircle = AjaxWar.svg.makeCircle(x,y,this.range,this.player.color);
-            this.rangeCircle.click(function(e){
-                if( !AjaxWar.ui.indicator.isValid() ) {
-                    return;
-                }
-                
-                if( !AjaxWar.gamestuff.canBuild() ) {
-                    return;
-                }
-
-                var id = AjaxWar.getNextRef();
-                var unitType = AjaxWar.ui.indicator.cursor;
-                mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
-
-                var unit = AjaxWar.game.getPlayer().createUnit(id, unitType, mousePos.x, mousePos.y);
-                AjaxWar.game.send('unitcreate', {'unit': unit.serialize()});
-
-                return false;
-            });
-            
+        if (!this.isLocal() || this.player.units.length == 0) {
+            this.finishBuild();
+        } else {
+            this.startBuild();
         }
     }
     
@@ -136,9 +65,7 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
         return false;
     });
     
-    log('created unit #'+id+' ('+unittype+')');
     
-    this.div = div;
 }
 
 AjaxWar.Unit.prototype = {
@@ -155,12 +82,107 @@ AjaxWar.Unit.prototype = {
         return (d / this.speed) * 1000;
     },
     
+    startBuild: function() {
+        var buildtimer = $("<div>").html("");
+        
+        var targ_y = (this.y + this.div.height() + 30);
+        if(this.type == 'tank') {
+            targ_y -= 15; // offsetting because of odd tank size
+        }
+        
+        buildtimer.css( 'left', (this.x-30) + 'px' );
+        buildtimer.css( 'top', targ_y + 'px' );
+        buildtimer.attr('id', 'buildtimer');
+        
+        $("#"+AjaxWar.playfieldId).prepend(buildtimer);
+        
+        var buildtimer_bar = $("<div>").html("");
+        buildtimer_bar.attr('id', 'buildtimer_bar');
+        
+        $("#buildtimer").prepend(buildtimer_bar);
+        
+        var unit = this;
+        $("#buildtimer_bar").animate(
+            { width: "100%" },
+            {
+                duration : AjaxWar.gamestuff.calcBuildTime(this.type),
+                complete: function() {
+                    $("#buildtimer").attr('id', 'dying_bar');
+                    $("#dying_bar").animate(
+                        { opacity: 0 },
+                        {
+                            duration : 500,
+                            complete: function() {
+                                unit.finishBuild();
+                                $(this).remove();
+                            }
+                        }
+                    );
+                }
+            }
+        );
+    },
+    
+    finishBuild: function() {
+        if (this.isLocal()) { 
+            AjaxWar.game.send('unitcreate', {'unit': this.serialize()});
+            
+            if( this.type === 'tank' || this.type === 'tower' ) {
+                if (this.type === 'tank') {
+                    this.div.draggable({
+                        start: function(evt, ui) {
+                            AjaxWar.ui.dragTank(this.id, evt, ui);
+                        },
+                        stop: function(evt, ui) {
+                            AjaxWar.ui.dropTank(this.id, evt, ui);
+                        }
+                    });
+                    this.div.css('position', 'absolute'); // no, jquery, I don't want draggable things to always be relative.
+                }
+                this.rangeCircle = AjaxWar.svg.makeCircle(this.x,this.y,this.range,'red','red');
+                this.rangeCircle.hide();
+            } else if (this.type === 'production') {
+                this.range = 120;
+                this.rangeCircle = AjaxWar.svg.makeCircle(this.x,this.y,this.range,this.player.color);
+                this.rangeCircle.click(function(e){
+                    if( !AjaxWar.ui.indicator.isValid() ) {
+                        return;
+                    }
+
+                    if( !AjaxWar.gamestuff.canBuild() ) {
+                        return;
+                    }
+
+                    var id = AjaxWar.getNextRef();
+                    var unitType = AjaxWar.ui.indicator.cursor;
+                    var mousePos = AjaxWar.util.relPosition("#"+AjaxWar.playfieldId, e.pageX, e.pageY);
+
+                    var unit = AjaxWar.game.getPlayer().createUnit(id, unitType, mousePos.x, mousePos.y);
+
+                    return false;
+                });
+
+            }
+        }
+        
+        
+        log('created unit #'+this.id+' ('+this.type+')');
+    },
+    
     blink: function() {
         var options = {'duration':100};
         $(this.div).animate({'opacity': 'toggle'},options).animate({'opacity': 'toggle'},options);
     },
     
     isEnemyOf: function(unit) {
+        
+        if( typeof unit.player == 'undefined' ) {
+            debugger;
+        }
+        
+        unit.player.id == 1;
+        this.player.id == 2;
+        
         return (unit.player.id != this.player.id);
     },
     
@@ -170,9 +192,8 @@ AjaxWar.Unit.prototype = {
     
     findTarget: function() {
         log("finding target");
-        var o;
         for (var id in AjaxWar._objRefs) {
-            o = AjaxWar._objRefs[id];
+            var o = AjaxWar._objRefs[id];
             if (o.hasOwnProperty('player') && o.isEnemyOf(this) && o.inRangeOf(this)) {
                 this.attack(o);
                 break;
@@ -183,7 +204,7 @@ AjaxWar.Unit.prototype = {
     attack: function(unit) {
         clearInterval(this.seeking);
         log("attack!");
-        unit.blink();
+        //unit.blink();
         if (rnd(100) < 20)
             unit.die();
         var tank = this;
@@ -192,6 +213,7 @@ AjaxWar.Unit.prototype = {
     
     die: function() {
         log("die");
+        throw "died"+this.id
         this.div.remove();
         AjaxWar.killRef(this.id);
     },
@@ -227,7 +249,7 @@ AjaxWar.Unit.prototype = {
         });
       
         this.findTarget();
-        this.seeking = setInterval(this.findTarget, 2000);
+        this.seeking = setInterval(function() { tank.findTarget() }, 2000);
     },
     
     serialize: function() {

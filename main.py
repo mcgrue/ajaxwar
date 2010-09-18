@@ -39,6 +39,7 @@ class BattleHandler(webapp.RequestHandler):
     
     def post(self, battle):
         if self.request.query_string == 'send':
+            logging.info(self.request.headers['content-type'])
             resp = urlfetch.fetch('https://%s.%s/%s' % (CREDS[REALM][0], REALM, battle), method='POST', 
                 headers={
                     "Authorization": "Basic "+base64.b64encode('%s:' % memcache.get(battle)),

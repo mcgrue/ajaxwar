@@ -28,7 +28,7 @@
     <script type="text/javascript" src="/static/js/ui.js"></script>
     <script type="text/javascript" src="/static/js/ajaxwar.js"></script>
     <script type="text/javascript">
-      var TIMEOUT = 5000;
+      var TIMEOUT = 3000;
       var PLAYERS = {{players}};
       var game = null;
       var lobby = null;
@@ -64,11 +64,12 @@
           if (!data) data = {};
           data['type'] = 'game:'+type;
           data['client'] = this.clientId;
-          $.ajaxSetup({contentType: 'application/json'});
-          $.post('?send', JSON.stringify(data));
+          //$.ajaxSetup({contentType: 'application/json'});
+          $.post('?send', {"json":JSON.stringify(data), "type": data['type']});
         },
         
         receive: function(message) {
+          message = JSON.parse(message.json); // this shit is fucked
           if (message.client != this.clientId) {
             this['on'+message.type.split(':')[1]](message);
           }
@@ -92,7 +93,7 @@
           AjaxWar.init('screen', color, this);
           this.send('enter', {color: color});
           this.createPlayer(this.clientId, color, false);
-          if (this.playerCount == 1 && this.isHost) this.setupLocations();
+          if (this.playerCount == 1 && this.isHost) this.setupLocations(); // if player count is 1
         },
         
         
@@ -181,10 +182,12 @@
             console.error(reason);
           },
           onmessage: function(msg) {
-            if (state == 'lobby' && msg.type.split(':')[0] == 'lobby') {
-              lobby.receive(msg);
-            } else if (state == 'game' && msg.type.split(':')[0] == 'game') {
-              game.receive(msg);
+            if (msg.type) {
+              if (state == 'lobby' && msg.type.split(':')[0] == 'lobby') {
+                lobby.receive(msg);
+              } else if (state == 'game' && msg.type.split(':')[0] == 'game') {
+                game.receive(msg);
+              }
             }
           },
         });
