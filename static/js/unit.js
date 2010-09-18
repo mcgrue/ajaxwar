@@ -46,8 +46,10 @@ AjaxWar.Unit = function(id, unittype, x, y, player) {
     this.svg.attr({
         fill: this.player.color,
         'stroke-width': 0,
-        opacity: (unittype == 'ghosttank') ? 0.5 : 1
     });
+    if (unittype == 'ghosttank') {
+        this.div.css('opacity', 0.5);
+    }
     
     
     if (unittype == 'production' || unittype == 'tank' || unittype == 'tower' ) {
@@ -95,11 +97,15 @@ AjaxWar.Unit.prototype = {
         buildtimer.css( 'left', (this.x-30) + 'px' );
         buildtimer.css( 'top', targ_y + 'px' );
         buildtimer.attr('id', 'buildtimer');
+        buildtimer.css('border', '1px solid #'+this.player.color);
+        
+        this.div.css('opacity', 0.5);
         
         $("#"+AjaxWar.playfieldId).prepend(buildtimer);
         
         var buildtimer_bar = $("<div>").html("");
         buildtimer_bar.attr('id', 'buildtimer_bar');
+        buildtimer_bar.css('background-color', '#'+this.player.color);
         
         $("#buildtimer").prepend(buildtimer_bar);
         
@@ -110,13 +116,15 @@ AjaxWar.Unit.prototype = {
                 duration : AjaxWar.gamestuff.calcBuildTime(this.type, this.player),
                 easing: 'linear',
                 complete: function() {
+                    unit.finishBuild();
+                    unit.div.css('opacity', 1);
+                    
                     $("#buildtimer").attr('id', 'dying_bar');
                     $("#dying_bar").animate(
                         { opacity: 0 },
                         {
                             duration : 500,
                             complete: function() {
-                                unit.finishBuild();
                                 $(this).remove();
                             }
                         }
@@ -198,7 +206,7 @@ AjaxWar.Unit.prototype = {
     },
     
     attack: function() {
-        //clearInterval(this.seeking);
+        if (!this.target.inRangeOf(this)) return;
         log("attack! ("+this.id+" on "+this.target.id+" violenced)");
         this.target.blink();
         if (rnd(100) < 50)

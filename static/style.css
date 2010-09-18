@@ -71,16 +71,17 @@
 
 #buildtimer, #dying_bar {
     position: absolute;
-    width: 60px;
-    height: 10px;
-    background-color: #FF0000;
+    width: 58px;
+    height: 8px;
+    padding: 1px;
+    border: 1px solid gray;
 }
 
 #buildtimer_bar {
     text-align: left;
-    background-color: #00FF00;
     padding: 0px;
     margin: 0px;
     width: 0%;
-    height: 10px;
+    height: 8px;
+    background-color: gray;
 }
