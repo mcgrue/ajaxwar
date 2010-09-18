@@ -23,13 +23,6 @@ AjaxWar.killRef = function(id) {
     delete AjaxWar._objRefs[id];
 }
 
-AjaxWar.seek = function(unit) {
-    log("seek")
-    if (unit.seeking) {
-        unit.findTarget();
-        setTimeout(function() { AjaxWar.seek(unit) }, 2000);
-    }
-}
 
 AjaxWar.getUnitById = function(id) {
     return AjaxWar._objRefs[id];

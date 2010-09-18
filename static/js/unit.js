@@ -106,6 +106,7 @@ AjaxWar.Unit.prototype = {
             { width: "100%" },
             {
                 duration : AjaxWar.gamestuff.calcBuildTime(this.type),
+                easing: 'linear',
                 complete: function() {
                     $("#buildtimer").attr('id', 'dying_bar');
                     $("#dying_bar").animate(
@@ -125,7 +126,9 @@ AjaxWar.Unit.prototype = {
     
     finishBuild: function() {
         if (this.isLocal()) { 
-            AjaxWar.game.send('unitcreate', {'unit': this.serialize()});
+            if (this.player.units.length > 1) {
+                AjaxWar.game.send('unitcreate', {'unit': this.serialize()});
+            }
             
             if( this.type === 'tank' || this.type === 'tower' ) {
                 if (this.type === 'tank') {
@@ -170,19 +173,10 @@ AjaxWar.Unit.prototype = {
     },
     
     blink: function() {
-        var options = {'duration':100};
-        $(this.div).animate({'opacity': 'toggle'},options).animate({'opacity': 'toggle'},options);
+        $(this.div).fadeOut(100).fadeIn(100);
     },
     
     isEnemyOf: function(unit) {
-        
-        if( typeof unit.player == 'undefined' ) {
-            debugger;
-        }
-        
-        unit.player.id == 1;
-        this.player.id == 2;
-        
         return (unit.player.id != this.player.id);
     },
     
@@ -191,7 +185,6 @@ AjaxWar.Unit.prototype = {
     },
     
     findTarget: function() {
-        log("finding target");
         for (var id in AjaxWar._objRefs) {
             var o = AjaxWar._objRefs[id];
             if (o.hasOwnProperty('player') && o.isEnemyOf(this) && o.inRangeOf(this)) {
@@ -203,8 +196,8 @@ AjaxWar.Unit.prototype = {
     
     attack: function(unit) {
         clearInterval(this.seeking);
-        log("attack!");
-        //unit.blink();
+        log("attack! ("+this.id+" on "+unit.id+" violenced)");
+        unit.blink();
         if (rnd(100) < 20)
             unit.die();
         var tank = this;
@@ -213,7 +206,6 @@ AjaxWar.Unit.prototype = {
     
     die: function() {
         log("die");
-        throw "died"+this.id
         this.div.remove();
         AjaxWar.killRef(this.id);
     },
