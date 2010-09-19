@@ -230,6 +230,10 @@ AjaxWar.Unit.prototype = {
             }
         }
         
+        this._removeReferences();
+    },
+    
+    _removeReferences: function() {
         this.div.remove();
         if (this.rangeCircle)
             this.rangeCircle.remove();

@@ -28,7 +28,7 @@ Player.prototype = {
   },
   die: function() {
       for (var unit in this.units) {
-          unit.die();
+          unit._removeReferences();
       }
   }
 }
